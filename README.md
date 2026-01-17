@@ -1,17 +1,17 @@
 # pre-claude
 
-A TUI tool for building structured prompts for Claude. Define form structures in config files, fill them out interactively in the terminal, and generate documents using your local Claude Code settings.
+TUI tool for building structured prompts for Claude. Define form structures in TypeScript config files, fill them interactively, and generate documents via Claude Code.
 
 ## Features
 
-- Form structure defined in TypeScript config files
-- Interactive TUI for filling out prompts
-- Uses your local Claude Code configuration as-is
+- TypeScript-based form configuration
+- Interactive TUI form wizard
+- Uses local Claude Code settings
 
 ## Requirements
 
 - Node.js 18+
-- Claude Code installed
+- Claude Code
 
 ## Installation
 
@@ -103,14 +103,14 @@ export default defineConfig({
 | `name` | `string` | Yes | Display name |
 | `steps` | `Step[]` | Yes | Form wizard steps |
 | `prompt` | `function` | Yes | Prompt generator function |
-| `outputDir` | `string` | No | Directory for saved documents |
-| `filename` | `string \| function` | No | Custom filename for saved documents |
+| `outputDir` | `string` | No | Output directory |
+| `filename` | `string \| function` | No | Custom filename |
 
 ## Field Types
 
 ### input
 
-Text input field with optional type variants and autocomplete suggestions.
+Single-line text input. Supports type variants (`text`, `date`, `url`) and autocomplete suggestions.
 
 ```typescript
 {
@@ -121,14 +121,14 @@ Text input field with optional type variants and autocomplete suggestions.
   placeholder: 'My Project',
   required: true,
   inputType: 'text', // 'text' | 'date' | 'url'
-  suggestions: ['Option A', 'Option B'], // autocomplete suggestions
+  suggestions: ['Option A', 'Option B'],
   default: 'Default Value',
 }
 ```
 
 ### textarea
 
-Multi-line text input.
+Multi-line text input. The `rows` property controls the display height.
 
 ```typescript
 {
@@ -143,7 +143,7 @@ Multi-line text input.
 
 ### select
 
-Dropdown selection.
+Dropdown selection from predefined options.
 
 ```typescript
 {
@@ -162,14 +162,14 @@ Dropdown selection.
 
 ### checkbox
 
-Boolean toggle.
+Boolean toggle for true/false values.
 
 ```typescript
 {
   id: 'agree',
   type: 'checkbox',
   label: 'I agree to the terms',
-  description: 'You must agree to continue',
+  description: 'Required to continue',
   required: true,
   default: false,
 }
@@ -179,7 +179,7 @@ Boolean toggle.
 
 ### repeatable
 
-Dynamically add/remove field instances.
+Allows dynamic addition and removal of field instances. Use `minCount` to set minimum items and `defaultCount` for initial count.
 
 ```typescript
 {
@@ -200,7 +200,7 @@ Dynamically add/remove field instances.
 
 ### group
 
-Visual grouping of fields.
+Groups multiple fields together visually without affecting data structure.
 
 ```typescript
 {
@@ -216,7 +216,7 @@ Visual grouping of fields.
 
 Fields support conditional visibility via the `when` property.
 
-### Simple Condition
+### Simple Conditions
 
 ```typescript
 // Show when priority is 'high'
@@ -238,10 +238,10 @@ Fields support conditional visibility via the `when` property.
 { ..., when: { field: 'notes', isEmpty: true } }
 ```
 
-### AND Condition
+### AND / OR Conditions
 
 ```typescript
-// Show when both conditions are true
+// AND: both conditions must be true
 {
   ...,
   when: {
@@ -251,12 +251,8 @@ Fields support conditional visibility via the `when` property.
     ]
   }
 }
-```
 
-### OR Condition
-
-```typescript
-// Show when either condition is true
+// OR: either condition must be true
 {
   ...,
   when: {
@@ -271,7 +267,6 @@ Fields support conditional visibility via the `when` property.
 ### Nested Conditions
 
 ```typescript
-// Complex nested condition
 {
   ...,
   when: {
@@ -288,22 +283,12 @@ Fields support conditional visibility via the `when` property.
 }
 ```
 
-### Cross-Section References
+### Cross-Step References
 
-Use dot notation to reference fields in other steps:
+Use dot notation to reference fields in other steps.
 
 ```typescript
 { ..., when: { field: 'overview.priority', is: 'high' } }
-```
-
-## Development
-
-```bash
-pnpm install
-pnpm build
-pnpm dev
-pnpm lint:fix
-pnpm typecheck
 ```
 
 ## License
