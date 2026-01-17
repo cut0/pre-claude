@@ -1,5 +1,7 @@
 # pre-claude
 
+[日本語版](./README-ja.md)
+
 **Pre** Claude is a tool for creating prompts via TUI when running Claude.
 You can define forms in TypeScript config files and share them with your team.
 
