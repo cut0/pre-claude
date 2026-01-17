@@ -185,6 +185,8 @@ const steps = [
               placeholder: 'https://...',
               inputType: 'url',
               required: true,
+              // Example: shown when name field is not empty
+              when: { field: 'name', isNotEmpty: true },
             },
             {
               type: 'textarea',
@@ -237,7 +239,7 @@ const steps = [
               type: 'repeatable',
               id: 'features',
               label: 'Features',
-              minCount: 1,
+              minCount: 0,
               field: {
                 type: 'group',
                 fields: [
@@ -269,9 +271,12 @@ const steps = [
 
 const prompt = ({
   aiContext,
+  formData,
 }: {
   aiContext: unknown;
-}) => `You are a technical writer assistant. Generate a design document based on the following input.
+  formData: unknown;
+}) => {
+  return `You are a technical writer assistant. Generate a design document based on the following input.
 
 ## Input Data Structure
 
@@ -327,16 +332,16 @@ Generate a Markdown design document with:
 3. **Design**: (If Figma link provided) Describe the design based on Figma file analysis
 4. **Libraries**: (If libraries provided) Describe each library with searched information
 
-## Important Instructions
-
-- Output ONLY the design document content in Markdown format
-- Do NOT include any preamble, explanation, or commentary (e.g., "I'll generate...", "Let me fetch...", "Based on the input...", "I will generate the document...", "Let me retrieve the information...")
-- Start directly with the document title (# Title)
-- Do NOT wrap the output in code blocks
-
 ## Input Data
 
-${JSON.stringify(aiContext, null, 2)}`;
+### Schema
+${JSON.stringify(aiContext, null, 2)}
+
+### Form Data
+${JSON.stringify(formData, null, 2)}
+
+Generate a design document based on the input above.`;
+};
 
 // Use defineConfig and defineScenario for type-safe configuration
 const config = defineConfig({
@@ -346,59 +351,8 @@ const config = defineConfig({
       name: 'Design Doc Generator',
       steps,
       prompt,
-      aiSettings: {
-        // Model settings
-        model: 'claude-sonnet-4-5-20250929',
-        fallbackModel: 'claude-haiku-4-5-20251001',
-
-        // Tool settings
-        tools: { type: 'preset', preset: 'claude_code' },
-        allowedTools: [
-          'Read',
-          'Glob',
-          'Grep',
-          'WebSearch',
-          'WebFetch',
-          // Figma official MCP tools
-          'mcp__figma__get_design_context',
-          'mcp__figma__get_variable_defs',
-          'mcp__figma__get_screenshot',
-          'mcp__figma__get_metadata',
-        ],
-        disallowedTools: ['Bash', 'Write', 'Edit'],
-
-        // Permission settings
-        permissionMode: 'dontAsk',
-        // allowDangerouslySkipPermissions: true,
-
-        // MCP servers
-        mcpServers: {
-          // Figma official MCP server (Remote)
-          // See: https://developers.figma.com/docs/figma-mcp-server
-          // figma: {
-          //   type: 'sse',
-          //   url: 'https://mcp.figma.com/sse',
-          // },
-          // Alternative: Figma Desktop MCP server (Local)
-          figma: {
-            type: 'http',
-            url: 'http://127.0.0.1:3845/mcp',
-          },
-        },
-        strictMcpConfig: true,
-      },
-      // Example: Type-safe filename using formData
-      // filename: ({ formData, timestamp }) => {
-      //   // formData.overview?.title is type-safe!
-      //   return `${formData.overview?.title ?? 'untitled'}-${timestamp}.md`;
-      // },
     }),
   ],
-  permissions: {
-    allowSave: true,
-  },
-  // AI mode: 'stream' (default), 'sync', or 'mock'
-  // ai: 'mock', // Use mock mode for development without AI
 });
 
 export default config;

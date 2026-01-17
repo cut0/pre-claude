@@ -33,13 +33,14 @@
     "pre-claude": "./dist/cli.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "examples"
   ],
   "scripts": {
     "build": "pnpm build:types && pnpm build:cli",
     "build:cli": "node scripts/build-cli.ts",
     "build:types": "tsc src/types.ts --declaration --outDir dist --skipLibCheck --module ESNext --moduleResolution bundler --target ES2022",
-    "dev": "pnpm build:cli && node dist/cli.js run --config examples/pre-claude-ja.config.ts",
+    "dev": "pnpm build:cli && node dist/cli.js run --config examples/pre-claude.config.ts",
     "lint:check": "biome check .",
     "lint:fix": "biome check --write .",
     "typecheck": "tsc --noEmit",
