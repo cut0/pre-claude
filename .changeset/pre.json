@@ -4,5 +4,7 @@
   "initialVersions": {
     "pre-claude": "0.0.0"
   },
-  "changesets": []
+  "changesets": [
+    "grumpy-crabs-impress"
+  ]
 }
