@@ -1,5 +1,11 @@
 # pre-claude
 
+## 0.0.1-beta.3
+
+### Patch Changes
+
+- b461603: docs: improve README clarity and add field descriptions
+
 ## 0.0.1-beta.2
 
 ### Patch Changes

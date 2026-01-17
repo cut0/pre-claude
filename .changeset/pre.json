@@ -4,5 +4,9 @@
   "initialVersions": {
     "pre-claude": "0.0.0"
   },
-  "changesets": ["grumpy-crabs-impress", "khaki-houses-beam"]
+  "changesets": [
+    "fresh-swans-drum",
+    "grumpy-crabs-impress",
+    "khaki-houses-beam"
+  ]
 }
