@@ -91,7 +91,7 @@ const enConfig: Config = {
   scenarios: [
     {
       id: 'default',
-      name: 'Library Introduction Plan',
+      name: 'Library Introduction Plan (Example)',
       steps: enSteps,
       prompt: enPrompt,
     },
@@ -175,7 +175,7 @@ const jaConfig: Config = {
   scenarios: [
     {
       id: 'default',
-      name: 'ライブラリ導入プラン',
+      name: 'ライブラリ導入プラン (Example)',
       steps: jaSteps,
       prompt: jaPrompt,
     },
