@@ -175,7 +175,7 @@ const jaConfig: Config = {
   scenarios: [
     {
       id: 'default',
-      name: '設計ドキュメント生成',
+      name: 'ライブラリ導入プラン',
       steps: jaSteps,
       prompt: jaPrompt,
     },
