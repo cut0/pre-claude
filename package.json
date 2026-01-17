@@ -37,7 +37,7 @@
   ],
   "scripts": {
     "build": "pnpm build:types && pnpm build:cli",
-    "build:cli": "tsx scripts/build-cli.ts",
+    "build:cli": "node scripts/build-cli.ts",
     "build:types": "tsc src/types.ts --declaration --outDir dist --skipLibCheck --module ESNext --moduleResolution bundler --target ES2022",
     "dev": "pnpm build:cli && node dist/cli.js run --config examples/pre-claude-ja.config.ts",
     "lint:check": "biome check .",
@@ -48,11 +48,9 @@
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "0.1.75",
-    "@hono/node-server": "1.19.7",
     "@inkjs/ui": "2.0.0",
     "citty": "0.1.6",
     "consola": "3.4.2",
-    "hono": "4.11.1",
     "ink": "6.6.0",
     "ink-select-input": "6.2.0",
     "jiti": "2.6.1",
@@ -67,7 +65,6 @@
     "@types/react": "19.1.8",
     "@types/react-dom": "19.1.6",
     "esbuild": "0.27.2",
-    "tsx": "4.20.6",
     "typescript": "5.8.3"
   },
   "packageManager": "pnpm@10.26.2"
