@@ -1,5 +1,11 @@
 # pre-claude
 
+## 0.0.1-beta.5
+
+### Patch Changes
+
+- 00fc0d8: docs: improve README descriptions and add screenshot table
+
 ## 0.0.1-beta.4
 
 ### Patch Changes
