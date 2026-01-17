@@ -11,11 +11,16 @@ export type GenerateDesignDocParams = {
   aiContext: AiContext;
 };
 
+export type GeneratePreviewResult = {
+  content: string;
+  sessionId: string | null;
+};
+
 export type GeneratePreviewParams = {
   scenario: Scenario;
   formData: Record<string, unknown>;
   aiContext: AiContext;
   onChunk: (chunk: string) => void;
-  onComplete: (content: string) => void;
+  onComplete: (result: GeneratePreviewResult) => void;
   onError: (error: Error) => void;
 };

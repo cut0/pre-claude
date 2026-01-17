@@ -1,4 +1,5 @@
-import { Box, Text, useStdout } from 'ink';
+import { spawn } from 'node:child_process';
+import { Box, Text, useApp, useStdout } from 'ink';
 import { type FC, useCallback, useMemo, useState } from 'react';
 
 import type { AiContext, Config, Scenario } from '../../../types';
@@ -38,7 +39,10 @@ export const Preview: FC<PreviewProps> = ({
   const [dataPreviewScrollOffset, setDataPreviewScrollOffset] = useState(0);
   const [savedFilename, setSavedFilename] = useState<string | null>(null);
   const [showDataPreview, setShowDataPreview] = useState(false);
+  const [showContinueDialog, setShowContinueDialog] = useState(false);
   const { stdout } = useStdout();
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const { exit } = useApp();
 
   const isEditing = editingFilename != null;
   const canSave = previewContent !== '' && !isGenerating;
@@ -48,15 +52,17 @@ export const Preview: FC<PreviewProps> = ({
   const maxVisible = Math.max(10, (stdout?.rows ?? 24) - fixedHeight);
   const visibleLines = lines.slice(scrollOffset, scrollOffset + maxVisible);
 
+  const canContinue = sessionId != null && !isGenerating;
   const controls = useMemo<ControlItem[]>(
     () => [
       { key: '↑↓/jk', action: 'scroll' },
       { key: 'r', action: 'regenerate' },
       ...(canSave ? [{ key: 's', action: 'save' }] : []),
+      ...(canContinue ? [{ key: 'c', action: 'continue in Claude' }] : []),
       { key: 'i', action: 'info' },
       { key: 'q/Esc', action: 'back' },
     ],
-    [canSave],
+    [canSave, canContinue],
   );
 
   const status = useMemo((): StatusInfo | undefined => {
@@ -79,6 +85,7 @@ export const Preview: FC<PreviewProps> = ({
     setIsGenerating(true);
     setError(null);
     setPreviewContent('');
+    setSessionId(null);
 
     let accumulatedContent = '';
 
@@ -91,8 +98,9 @@ export const Preview: FC<PreviewProps> = ({
           accumulatedContent += chunk;
           setPreviewContent(accumulatedContent);
         },
-        onComplete: (content) => {
-          setPreviewContent(content);
+        onComplete: (result) => {
+          setPreviewContent(result.content);
+          setSessionId(result.sessionId);
           setIsGenerating(false);
         },
         onError: (err) => {
@@ -148,27 +156,80 @@ export const Preview: FC<PreviewProps> = ({
     [aiContext],
   );
   const maxDataLines = Math.max(formDataLines.length, aiContextLines.length);
+  const handleContinueInClaude = useCallback(
+    async (shouldSave: boolean) => {
+      if (!sessionId) return;
+
+      if (shouldSave && canSave) {
+        setIsSaving(true);
+        setError(null);
+        try {
+          await saveDocument({
+            config,
+            scenario,
+            formData: formValues,
+            aiContext,
+            content: previewContent,
+            existingFilename: editingFilename,
+          });
+        } catch (err) {
+          setError(err instanceof Error ? err.message : 'Failed to save');
+          setIsSaving(false);
+          setShowContinueDialog(false);
+          return;
+        }
+        setIsSaving(false);
+      }
+
+      exit();
+
+      setTimeout(() => {
+        const child = spawn('claude', ['--resume', sessionId], {
+          stdio: 'inherit',
+          shell: true,
+        });
+
+        child.on('close', (code) => {
+          process.exit(code ?? 0);
+        });
+      }, 100);
+    },
+    [
+      sessionId,
+      exit,
+      canSave,
+      config,
+      scenario,
+      formValues,
+      aiContext,
+      previewContent,
+      editingFilename,
+    ],
+  );
 
   useControl({
     onEscape: () => {
-      if (showDataPreview) {
+      if (showContinueDialog) {
+        setShowContinueDialog(false);
+      } else if (showDataPreview) {
         setShowDataPreview(false);
       } else {
         onBack();
       }
     },
-    onQuit: onBack,
+    onQuit: showContinueDialog ? undefined : onBack,
     onSave: () => {
-      if (!isGenerating && !isSaving) {
+      if (!isGenerating && !isSaving && !showContinueDialog) {
         handleSave();
       }
     },
     onRegenerate: () => {
-      if (!isGenerating) {
+      if (!isGenerating && !showContinueDialog) {
         handleGenerate();
       }
     },
     onUp: () => {
+      if (showContinueDialog) return;
       if (showDataPreview) {
         setDataPreviewScrollOffset((prev) => Math.max(0, prev - 1));
       } else {
@@ -176,6 +237,7 @@ export const Preview: FC<PreviewProps> = ({
       }
     },
     onDown: () => {
+      if (showContinueDialog) return;
       if (showDataPreview) {
         // Account for borders (2) and title (1) and hint (1)
         const maxDataVisible = Math.max(5, maxVisible - 2);
@@ -187,8 +249,12 @@ export const Preview: FC<PreviewProps> = ({
           Math.min(prev + 1, Math.max(0, lines.length - maxVisible)),
         );
       }
+      setScrollOffset((prev) =>
+        Math.min(prev + 1, Math.max(0, lines.length - maxVisible)),
+      );
     },
     onInfo: () => {
+      if (showContinueDialog) return;
       setShowDataPreview((prev) => {
         if (!prev) {
           // Reset scroll when opening data preview
@@ -196,6 +262,20 @@ export const Preview: FC<PreviewProps> = ({
         }
         return !prev;
       });
+    },
+    onContinue: () => {
+      if (canContinue && !showContinueDialog) {
+        setShowContinueDialog(true);
+      }
+    },
+    onChar: (char) => {
+      if (showContinueDialog) {
+        if (char === 'y' || char === 'Y') {
+          handleContinueInClaude(true);
+        } else if (char === 'n' || char === 'N') {
+          handleContinueInClaude(false);
+        }
+      }
     },
   });
 
@@ -310,6 +390,41 @@ export const Preview: FC<PreviewProps> = ({
             {Math.min(scrollOffset + maxVisible, lines.length)} of{' '}
             {lines.length}
           </Text>
+        </Box>
+      )}
+
+      {showContinueDialog && (
+        <Box
+          flexDirection="column"
+          borderStyle="round"
+          borderColor="yellow"
+          paddingX={1}
+          paddingY={0}
+          marginTop={1}
+        >
+          <Box marginTop={-1} marginLeft={1}>
+            <Text backgroundColor="black" color="yellow" bold>
+              {' '}
+              Continue in Claude{' '}
+            </Text>
+          </Box>
+          <Text>Save document before continuing?</Text>
+          <Box marginTop={1}>
+            <Text>
+              <Text color="green" bold>
+                [y]
+              </Text>{' '}
+              Save and continue{'  '}
+              <Text color="blue" bold>
+                [n]
+              </Text>{' '}
+              Continue without saving{'  '}
+              <Text dimColor bold>
+                [Esc]
+              </Text>{' '}
+              Cancel
+            </Text>
+          </Box>
         </Box>
       )}
     </ScenarioLayout>
