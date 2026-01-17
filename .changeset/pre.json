@@ -5,10 +5,12 @@
     "pre-claude": "0.0.0"
   },
   "changesets": [
+    "chilled-pumas-care",
     "dull-dogs-build",
     "fresh-swans-drum",
     "friendly-cameras-flash",
     "grumpy-crabs-impress",
+    "hip-lies-relate",
     "khaki-houses-beam",
     "rude-tools-pull"
   ]

@@ -1,5 +1,12 @@
 # pre-claude
 
+## 0.0.1-beta.6
+
+### Patch Changes
+
+- d45281a: refactor: inline example configs in example command
+- 0063aaa: docs: improve README with concepts, schemas, and better structure
+
 ## 0.0.1-beta.5
 
 ### Patch Changes

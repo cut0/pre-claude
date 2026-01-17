@@ -1,6 +1,6 @@
 {
   "name": "pre-claude",
-  "version": "0.0.1-beta.5",
+  "version": "0.0.1-beta.6",
   "description": "🐍 TUI for building structured prompts for Claude",
   "keywords": [
     "cli",
@@ -32,7 +32,9 @@
   "bin": {
     "pre-claude": "./dist/cli.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "pnpm build:types && pnpm build:cli",
     "build:cli": "node scripts/build-cli.ts",
