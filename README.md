@@ -1,6 +1,7 @@
 # pre-claude
 
-TUI tool for building structured prompts for Claude. Define form structures in TypeScript config files, fill them interactively, and generate documents via Claude Code.
+**Pre** Claude is a tool for creating prompts via TUI when running Claude.
+You can define forms in TypeScript config files and share them with your team.
 
 ## Features
 
