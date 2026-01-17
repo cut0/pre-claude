@@ -1,17 +1,18 @@
 # pre-claude
 
-Claude への構造化されたプロンプトを作成するための TUI ツール。設定ファイルでフォーム構造を定義し、ターミナルで対話的に入力し、ローカルの Claude Code 設定をそのまま使用してドキュメントを生成。
+**Pre** Claude は Claude を実行する際のプロンプトを TUI を介して作成するツールです。
+TypeScript 設定ファイルでフォームを定義することができチームで共有することができます。
 
 ## 特徴
 
-- TypeScript 設定ファイルでフォーム構造を定義
-- TUI で対話的にプロンプトを入力
-- ローカルの Claude Code 設定をそのまま利用
+- TypeScript ベースのフォーム設定
+- 対話型 TUI フォームウィザード
+- ローカル Claude Code 設定を使用
 
 ## 必要条件
 
 - Node.js 18+
-- Claude Code のインストール
+- Claude Code
 
 ## インストール
 
@@ -33,7 +34,7 @@ npx pre-claude init [-o ファイル名] [-f]
 
 ```bash
 npx pre-claude run --config ./pre-claude.config.ts
-# シナリオ ID を指定して実行
+# シナリオ ID 指定
 npx pre-claude run --config ./pre-claude.config.ts --scenario design-doc
 ```
 
@@ -49,21 +50,21 @@ const steps = [
   {
     slug: 'overview',
     title: '概要',
-    description: 'プロジェクトの基本情報',
+    description: 'プロジェクト基本情報',
     name: 'overview',
     fields: [
       {
         id: 'projectName',
         type: 'input',
         label: 'プロジェクト名',
-        description: 'プロジェクトの名前を入力',
+        description: 'プロジェクト名を入力',
         required: true,
       },
       {
         id: 'description',
         type: 'textarea',
         label: '説明',
-        description: 'プロジェクトを簡潔に説明',
+        description: 'プロジェクトの概要',
         rows: 5,
       },
       {
@@ -88,29 +89,29 @@ export default defineConfig({
       name: '設計ドキュメント',
       steps,
       prompt: ({ formData, aiContext }) =>
-        `以下の情報に基づいて設計ドキュメントを作成:\n${JSON.stringify({ formData, aiContext }, null, 2)}`,
+        `以下に基づき設計ドキュメントを作成:\n${JSON.stringify({ formData, aiContext }, null, 2)}`,
       outputDir: './docs',
     }),
   ],
 });
 ```
 
-### シナリオのプロパティ
+### シナリオプロパティ
 
 | プロパティ | 型 | 必須 | 説明 |
-|----------|------|----------|-------------|
-| `id` | `string` | はい | 一意識別子 |
-| `name` | `string` | はい | 表示名 |
-| `steps` | `Step[]` | はい | フォームウィザードのステップ |
-| `prompt` | `function` | はい | プロンプト生成関数 |
-| `outputDir` | `string` | いいえ | 保存先ディレクトリ |
-| `filename` | `string \| function` | いいえ | カスタムファイル名 |
+|----------|------|------|------|
+| `id` | `string` | Yes | 一意識別子 |
+| `name` | `string` | Yes | 表示名 |
+| `steps` | `Step[]` | Yes | フォームステップ |
+| `prompt` | `function` | Yes | プロンプト生成関数 |
+| `outputDir` | `string` | No | 出力ディレクトリ |
+| `filename` | `string \| function` | No | カスタムファイル名 |
 
 ## フィールドタイプ
 
 ### input
 
-テキスト入力フィールド。タイプバリエーションとオートコンプリート候補をサポート。
+単一行テキスト入力です。タイプバリエーション（`text`、`date`、`url`）とオートコンプリート候補をサポートしています。
 
 ```typescript
 {
@@ -121,14 +122,14 @@ export default defineConfig({
   placeholder: 'マイプロジェクト',
   required: true,
   inputType: 'text', // 'text' | 'date' | 'url'
-  suggestions: ['選択肢A', '選択肢B'], // オートコンプリート候補
+  suggestions: ['選択肢A', '選択肢B'],
   default: 'デフォルト値',
 }
 ```
 
 ### textarea
 
-複数行テキスト入力。
+複数行テキスト入力です。`rows` プロパティで表示行数を制御できます。
 
 ```typescript
 {
@@ -143,7 +144,7 @@ export default defineConfig({
 
 ### select
 
-ドロップダウン選択。
+定義済み選択肢からのドロップダウン選択です。
 
 ```typescript
 {
@@ -162,14 +163,14 @@ export default defineConfig({
 
 ### checkbox
 
-チェックボックス。
+真偽値のトグルです。
 
 ```typescript
 {
   id: 'agree',
   type: 'checkbox',
-  label: '利用規約に同意する',
-  description: '続行するには同意が必要です',
+  label: '利用規約に同意',
+  description: '続行に必須',
   required: true,
   default: false,
 }
@@ -179,7 +180,7 @@ export default defineConfig({
 
 ### repeatable
 
-フィールドを動的に追加/削除可能。
+フィールドを動的に追加・削除できます。`minCount` で最小数、`defaultCount` で初期数を設定します。
 
 ```typescript
 {
@@ -200,7 +201,7 @@ export default defineConfig({
 
 ### group
 
-フィールドの視覚的なグループ化。
+複数のフィールドを視覚的にグループ化します。データ構造には影響しません。
 
 ```typescript
 {
@@ -214,7 +215,7 @@ export default defineConfig({
 
 ## 条件付き表示
 
-`when` プロパティでフィールドの条件付き表示をサポート。
+`when` プロパティで条件付き表示を設定できます。
 
 ### 単純な条件
 
@@ -238,10 +239,10 @@ export default defineConfig({
 { ..., when: { field: 'notes', isEmpty: true } }
 ```
 
-### AND 条件
+### AND / OR 条件
 
 ```typescript
-// 両方の条件が true のとき表示
+// AND: 両条件が true のとき表示
 {
   ...,
   when: {
@@ -251,12 +252,8 @@ export default defineConfig({
     ]
   }
 }
-```
 
-### OR 条件
-
-```typescript
-// いずれかの条件が true のとき表示
+// OR: いずれかが true のとき表示
 {
   ...,
   when: {
@@ -268,10 +265,9 @@ export default defineConfig({
 }
 ```
 
-### ネストした条件
+### ネスト条件
 
 ```typescript
-// 複雑なネスト条件
 {
   ...,
   when: {
@@ -290,20 +286,10 @@ export default defineConfig({
 
 ### ステップ間参照
 
-ドット記法で他のステップのフィールドを参照:
+ドット記法で他のステップのフィールドを参照できます。
 
 ```typescript
 { ..., when: { field: 'overview.priority', is: 'high' } }
-```
-
-## 開発
-
-```bash
-pnpm install
-pnpm build
-pnpm dev
-pnpm lint:fix
-pnpm typecheck
 ```
 
 ## ライセンス
