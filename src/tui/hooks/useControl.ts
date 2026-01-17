@@ -15,6 +15,7 @@ export type ControlOptions = {
   onPrev?: () => void;
   onRegenerate?: () => void;
   onInfo?: () => void;
+  onContinue?: () => void;
   onChar?: (char: string) => void;
   isActive?: boolean;
   viKeysEnabled?: boolean;
@@ -36,6 +37,7 @@ export const useControl = (options: ControlOptions = {}): void => {
     onPrev,
     onRegenerate,
     onInfo,
+    onContinue,
     onChar,
     isActive = true,
     viKeysEnabled = true,
@@ -110,6 +112,9 @@ export const useControl = (options: ControlOptions = {}): void => {
           return;
         case 'i':
           onInfo?.();
+          return;
+        case 'c':
+          onContinue?.();
           return;
       }
 
