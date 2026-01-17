@@ -7,13 +7,9 @@ import type {
   FieldConditionObject,
   FieldConditionSingle,
   FormField,
-  LayoutField,
   Step,
 } from '../../../definitions';
-
-const isLayoutField = (field: Field): field is LayoutField => {
-  return field.type === 'repeatable' || field.type === 'group';
-};
+import { isLayoutField } from '../../../schema';
 
 const getValueByPath = (
   obj: Record<string, unknown>,
