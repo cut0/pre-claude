@@ -146,15 +146,61 @@ export default defineConfig({
 | `outputDir` | `string` | | Output directory |
 | `filename` | `string \| function` | | Filename |
 
-The `prompt` function receives the following arguments:
+The `prompt` function receives the following arguments. You can view the actual values by pressing `i` on the preview screen.
 
 #### formData
 
 An object containing the values entered in the form.
 
+```typescript
+{
+  [stepName: string]: {
+    [fieldId: string]: string | boolean | Array<{ [fieldId: string]: string | boolean }>
+  }
+}
+```
+
+Example:
+
+```json
+{
+  "overview": {
+    "title": "My Project",
+    "priority": "high"
+  },
+  "features": {
+    "items": [
+      { "name": "Feature 1", "desc": "Description 1" },
+      { "name": "Feature 2", "desc": "Description 2" }
+    ]
+  }
+}
+```
+
 #### aiContext
 
 Metadata such as field labels and descriptions. Helps the AI understand the meaning of each field.
+
+```typescript
+{
+  [stepName: string]: {
+    _step: { title: string; description: string };
+    [fieldId: string]: { label: string; description: string }
+  }
+}
+```
+
+Example:
+
+```json
+{
+  "overview": {
+    "_step": { "title": "Overview", "description": "Basic project information" },
+    "title": { "label": "Title", "description": "Project name" },
+    "priority": { "label": "Priority", "description": "Select priority" }
+  }
+}
+```
 
 ### Step
 

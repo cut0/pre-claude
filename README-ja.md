@@ -144,15 +144,61 @@ export default defineConfig({
 | `outputDir` | `string` | | 出力ディレクトリ |
 | `filename` | `string \| function` | | ファイル名 |
 
-`prompt` 関数は以下の引数を受け取ります:
+`prompt` 関数は以下の引数を受け取ります。実際の値はプレビュー画面で `i` キーを押すと確認できます。
 
 #### formData
 
 フォームに入力された値がオブジェクトとして格納されます。
 
+```typescript
+{
+  [stepName: string]: {
+    [fieldId: string]: string | boolean | Array<{ [fieldId: string]: string | boolean }>
+  }
+}
+```
+
+例:
+
+```json
+{
+  "overview": {
+    "title": "My Project",
+    "priority": "high"
+  },
+  "features": {
+    "items": [
+      { "name": "Feature 1", "desc": "Description 1" },
+      { "name": "Feature 2", "desc": "Description 2" }
+    ]
+  }
+}
+```
+
 #### aiContext
 
 フィールドのラベルや説明などのメタ情報です。AI がフィールドの意味を理解するために使用します。
+
+```typescript
+{
+  [stepName: string]: {
+    _step: { title: string; description: string };
+    [fieldId: string]: { label: string; description: string }
+  }
+}
+```
+
+例:
+
+```json
+{
+  "overview": {
+    "_step": { "title": "概要", "description": "プロジェクト基本情報" },
+    "title": { "label": "タイトル", "description": "プロジェクト名" },
+    "priority": { "label": "優先度", "description": "優先度を選択" }
+  }
+}
+```
 
 ### ステップ
 
