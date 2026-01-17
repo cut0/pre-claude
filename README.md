@@ -2,8 +2,10 @@
 
 [日本語版](./README-ja.md)
 
-A TUI tool for efficiently creating complex prompts with structured forms for Claude Code.
+"pre"-claude is a TUI tool for efficiently creating complex prompts with structured forms for Claude Code.
+
 Define templates in TypeScript config files to share with your team and enable reproducible prompt workflows.
+
 Works seamlessly with your existing Claude Code setup including MCP and Skills.
 
 ## Concepts

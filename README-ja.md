@@ -1,7 +1,10 @@
 # pre-claude
 
-複雑なプロンプトをフォームで効率的に作成できる Claude Code 向け TUI ツールです。
+
+「pre」-claude は複雑なプロンプトをフォームで効率的に作成できる Claude Code 向け TUI ツールです。
+
 TypeScript 設定ファイルで定義したテンプレートをチームで共有し、再現性のあるプロンプト運用を実現できます。
+
 MCP や Skills など既存の Claude Code セットアップをそのまま利用できます。
 
 ## 概念
