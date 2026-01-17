@@ -6,8 +6,15 @@ A TUI tool for efficiently creating complex prompts with structured forms for Cl
 Define templates in TypeScript config files to share with your team and enable reproducible prompt workflows.
 Works seamlessly with your existing Claude Code setup including MCP and Skills.
 
-- **Scenario**: Defines a document type (e.g., design doc, meeting notes). Configure prompt templates and output destinations.
-- **Step**: Each page of the form wizard. Group related fields together for easier input.
+## Concepts
+
+### Scenario
+
+Defines a document type (e.g., design doc, meeting notes). Configure prompt templates and output destinations.
+
+### Step
+
+Each page of the form wizard. Group related fields together for easier input.
 
 | Scenario Selection | Form Input | Preview |
 |:---:|:---:|:---:|
@@ -141,8 +148,13 @@ export default defineConfig({
 
 The `prompt` function receives the following arguments:
 
-- **formData**: An object containing the values entered in the form.
-- **aiContext**: Metadata such as field labels and descriptions. Helps the AI understand the meaning of each field.
+#### formData
+
+An object containing the values entered in the form.
+
+#### aiContext
+
+Metadata such as field labels and descriptions. Helps the AI understand the meaning of each field.
 
 ### Step
 
