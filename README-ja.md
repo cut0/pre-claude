@@ -35,11 +35,11 @@ npx pre-claude run --config ./pre-claude.config.ts
 
 ## 画面
 
-TUI は 3 つの画面で構成される。
+TUI は 3 つの画面で構成されています。
 
 ### シナリオ選択画面
 
-起動時に表示される 2 ペイン画面。左ペインでシナリオを選び、右ペインで新規作成または既存ドキュメントの編集を選択する。
+起動時に表示される 2 ペイン画面です。左ペインでシナリオを選び、右ペインで新規作成または既存ドキュメントの編集を選択します。
 
 ![select](docs/assets/select.gif)
 
@@ -52,7 +52,7 @@ TUI は 3 つの画面で構成される。
 
 ### フォーム入力画面
 
-上部にステップタブ、左側にフィールド一覧、右側に編集エリアの 3 パネル構成。
+上部にステップタブ、左側にフィールド一覧、右側に編集エリアの 3 パネル構成です。
 
 ![edit](docs/assets/edit.gif)
 
@@ -69,7 +69,7 @@ TUI は 3 つの画面で構成される。
 
 ### プレビュー画面
 
-AI がドキュメントを生成し、結果をストリーミング表示する。
+AI がドキュメントを生成し、結果をストリーミング表示します。
 
 ![preview](docs/assets/preview.gif)
 
@@ -82,7 +82,7 @@ AI がドキュメントを生成し、結果をストリーミング表示す�
 | `i` | formData / aiContext 表示 |
 | `Esc` / `q` | 戻る |
 
-`c` を押すと Claude Code のセッションを引き継いで対話を続行できる。
+`c` を押すと Claude Code のセッションを引き継いで対話を続行できます。
 
 ## 設定ファイル
 
@@ -134,7 +134,7 @@ export default defineConfig({
 | `outputDir` | `string` | | 出力ディレクトリ |
 | `filename` | `string \| function` | | ファイル名 |
 
-`prompt` は `formData`（入力値）と `aiContext`（フィールドのラベル・説明）を受け取る。
+`prompt` は `formData`（入力値）と `aiContext`（フィールドのラベル・説明）を受け取ります。
 
 ### ステップ
 
@@ -209,7 +209,7 @@ export default defineConfig({
 
 #### repeatable
 
-動的に追加・削除できる繰り返しフィールド。
+動的に追加・削除できる繰り返しフィールドです。
 
 ```typescript
 {
@@ -228,7 +228,7 @@ export default defineConfig({
 }
 ```
 
-formData は配列になる:
+formData は配列になります:
 
 ```typescript
 {
@@ -241,11 +241,11 @@ formData は配列になる:
 
 #### group
 
-複数フィールドをグループ化。repeatable 内で使用する。
+複数フィールドをグループ化します。repeatable 内で使用します。
 
 ### 条件付き表示
 
-`when` プロパティでフィールドの表示条件を指定できる。
+`when` プロパティでフィールドの表示条件を指定できます。
 
 ```typescript
 // 単純な条件
@@ -283,7 +283,7 @@ formData は配列になる:
 
 ### 型安全
 
-`defineScenario` と `as const satisfies Step[]` を使うと `formData` に型推論が効く。
+`defineScenario` と `as const satisfies Step[]` を使うと `formData` に型推論が効きます。
 
 ```typescript
 const scenario = defineScenario({
