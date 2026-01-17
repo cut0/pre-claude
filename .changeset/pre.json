@@ -5,8 +5,10 @@
     "pre-claude": "0.0.0"
   },
   "changesets": [
+    "dull-dogs-build",
     "fresh-swans-drum",
     "grumpy-crabs-impress",
-    "khaki-houses-beam"
+    "khaki-houses-beam",
+    "rude-tools-pull"
   ]
 }
