@@ -1,12 +1,8 @@
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
 import { defineCommand } from 'citty';
 import { consola } from 'consola';
-import { createJiti } from 'jiti';
-
 import { render } from 'ink';
-import { type Config, safeParseConfig } from '../../definitions';
+
+import type { Config, Step } from '../../definitions';
 import { App } from '../../tui/App';
 
 const enterAlternateScreen = () => {
@@ -18,22 +14,177 @@ const exitAlternateScreen = () => {
   process.stdout.write('\x1b[?1049l');
 };
 
-const loadConfig = async (configPath: string): Promise<Config> => {
-  const jiti = createJiti(import.meta.url);
-  const configModule = await jiti.import(configPath);
-  const config = (configModule as { default: Config }).default;
+// =============================================================================
+// English Config
+// =============================================================================
 
-  const result = safeParseConfig(config);
-  if (!result.success) {
-    const issues = result.issues.map((issue) => {
-      const pathStr = issue.path?.map((p) => p.key).join('.') ?? '';
-      return `  - ${pathStr}: ${issue.message}`;
-    });
-    throw new Error(`Invalid config:\n${issues.join('\n')}`);
-  }
+const enSteps = [
+  {
+    slug: 'libraries',
+    title: 'Libraries',
+    description: 'Libraries to introduce',
+    name: 'libraries',
+    fields: [
+      {
+        type: 'repeatable',
+        id: 'items',
+        label: 'Libraries',
+        minCount: 1,
+        field: {
+          type: 'group',
+          fields: [
+            {
+              type: 'input',
+              id: 'name',
+              label: 'Library Name',
+              description: 'Name of the library',
+              placeholder: 'e.g., react-query, zod',
+              required: true,
+            },
+            {
+              type: 'input',
+              id: 'url',
+              label: 'URL',
+              description: 'Link to documentation or repository',
+              placeholder: 'https://...',
+              inputType: 'url',
+            },
+          ],
+        },
+      },
+    ],
+  },
+] as const satisfies Step[];
 
-  return config;
+const enPrompt = ({
+  aiContext,
+  formData,
+}: {
+  aiContext: unknown;
+  formData: unknown;
+}) => {
+  return `You are a software architect. Create an introduction plan for the following libraries.
+
+## Tasks
+
+1. For each library URL provided, use WebFetch to retrieve and analyze the documentation
+2. Based on the analysis, create an introduction plan including:
+   - Library overview and purpose
+   - Key features and benefits
+   - Installation steps
+   - Basic usage examples
+   - Potential risks and considerations
+   - Recommended adoption timeline
+
+## Input Data
+
+### Schema
+${JSON.stringify(aiContext, null, 2)}
+
+### Form Data
+${JSON.stringify(formData, null, 2)}
+
+Create a comprehensive library introduction plan based on the input above.`;
 };
+
+const enConfig: Config = {
+  scenarios: [
+    {
+      id: 'default',
+      name: 'Library Introduction Plan (Example)',
+      steps: enSteps,
+      prompt: enPrompt,
+    },
+  ],
+};
+
+// =============================================================================
+// Japanese Config
+// =============================================================================
+
+const jaSteps = [
+  {
+    slug: 'libraries',
+    title: 'ライブラリ',
+    description: '導入するライブラリ',
+    name: 'libraries',
+    fields: [
+      {
+        type: 'repeatable',
+        id: 'items',
+        label: 'ライブラリ一覧',
+        minCount: 1,
+        field: {
+          type: 'group',
+          fields: [
+            {
+              type: 'input',
+              id: 'name',
+              label: 'ライブラリ名',
+              description: 'ライブラリの名前',
+              placeholder: '例: react-query, zod',
+              required: true,
+            },
+            {
+              type: 'input',
+              id: 'url',
+              label: 'URL',
+              description: 'ドキュメントまたはリポジトリへのリンク',
+              placeholder: 'https://...',
+              inputType: 'url',
+            },
+          ],
+        },
+      },
+    ],
+  },
+] as const satisfies Step[];
+
+const jaPrompt = ({
+  aiContext,
+  formData,
+}: {
+  aiContext: unknown;
+  formData: unknown;
+}) => {
+  return `あなたはソフトウェアアーキテクトです。以下のライブラリの導入プランを作成してください。
+
+## タスク
+
+1. 各ライブラリの URL が提供されている場合、WebFetch を使用してドキュメントを取得・分析してください
+2. 分析結果に基づき、以下を含む導入プランを作成してください：
+   - ライブラリの概要と目的
+   - 主な機能とメリット
+   - インストール手順
+   - 基本的な使用例
+   - 潜在的なリスクと考慮事項
+   - 推奨される導入スケジュール
+
+## 入力データ
+
+### スキーマ
+${JSON.stringify(aiContext, null, 2)}
+
+### フォームデータ
+${JSON.stringify(formData, null, 2)}
+
+上記の入力に基づいて、包括的なライブラリ導入プランを作成してください。`;
+};
+
+const jaConfig: Config = {
+  scenarios: [
+    {
+      id: 'default',
+      name: 'ライブラリ導入プラン (Example)',
+      steps: jaSteps,
+      prompt: jaPrompt,
+    },
+  ],
+};
+
+// =============================================================================
+// Command
+// =============================================================================
 
 export const exampleCommand = defineCommand({
   meta: {
@@ -56,17 +207,9 @@ export const exampleCommand = defineCommand({
       process.exit(1);
     }
 
-    // Resolve the path to examples directory relative to this file
-    const __dirname = path.dirname(fileURLToPath(import.meta.url));
-    const examplesDir = path.resolve(__dirname, '../../examples');
-    const configFileName =
-      lang === 'ja' ? 'pre-claude-ja.config.ts' : 'pre-claude.config.ts';
-    const configPath = path.join(examplesDir, configFileName);
+    const config = lang === 'ja' ? jaConfig : enConfig;
 
     try {
-      const config = await loadConfig(configPath);
-
-      // Check if terminal supports raw mode
       if (process.stdin.isTTY !== true) {
         throw new Error(
           'TUI requires an interactive terminal. Please run this command in a terminal that supports raw mode.',

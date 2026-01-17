@@ -32,10 +32,7 @@
   "bin": {
     "pre-claude": "./dist/cli.js"
   },
-  "files": [
-    "dist",
-    "examples"
-  ],
+  "files": ["dist"],
   "scripts": {
     "build": "pnpm build:types && pnpm build:cli",
     "build:cli": "node scripts/build-cli.ts",
