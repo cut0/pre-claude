@@ -2,7 +2,7 @@ import { defineCommand } from 'citty';
 import { consola } from 'consola';
 import { render } from 'ink';
 
-import type { Config, SelectOption, Step } from '../../definitions';
+import type { Config, Step } from '../../definitions';
 import { App } from '../../tui/App';
 
 const enterAlternateScreen = () => {
@@ -18,99 +18,18 @@ const exitAlternateScreen = () => {
 // English Config
 // =============================================================================
 
-const enPriorityOptions: SelectOption[] = [
-  { value: 'high', label: 'High' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'low', label: 'Low' },
-];
-
 const enSteps = [
-  {
-    slug: 'overview',
-    title: 'Overview',
-    description: 'Basic information about the feature',
-    name: 'overview',
-    fields: [
-      {
-        type: 'input',
-        id: 'title',
-        label: 'Title',
-        description: 'Feature title',
-        placeholder: 'Enter feature title',
-        required: true,
-      },
-      {
-        type: 'textarea',
-        id: 'description',
-        label: 'Description',
-        description: 'Detailed description of the feature',
-        placeholder: 'Describe the feature...',
-        rows: 4,
-      },
-      {
-        type: 'select',
-        id: 'priority',
-        label: 'Priority',
-        description: 'Feature priority level',
-        placeholder: 'Select priority',
-        options: enPriorityOptions,
-      },
-      {
-        type: 'input',
-        id: 'deadline',
-        label: 'Deadline',
-        description: 'Target completion date (required for high priority)',
-        placeholder: 'YYYY-MM-DD',
-        inputType: 'date',
-        required: true,
-        when: { field: 'priority', is: 'high' },
-      },
-      {
-        type: 'textarea',
-        id: 'risk_assessment',
-        label: 'Risk Assessment',
-        description: 'Potential risks and mitigation strategies',
-        placeholder: 'Describe potential risks...',
-        rows: 3,
-        when: { field: 'priority', is: ['high', 'medium'] },
-      },
-    ],
-  },
-  {
-    slug: 'design',
-    title: 'Design',
-    description: 'Design references and mockups',
-    name: 'design',
-    fields: [
-      {
-        type: 'input',
-        id: 'figma_link',
-        label: 'Figma Link',
-        description: 'Link to Figma design file or frame',
-        placeholder: 'https://www.figma.com/design/...',
-        inputType: 'url',
-      },
-      {
-        type: 'textarea',
-        id: 'design_notes',
-        label: 'Design Notes',
-        description: 'Additional notes about the design',
-        placeholder: 'Any specific design considerations...',
-        rows: 3,
-      },
-    ],
-  },
   {
     slug: 'libraries',
     title: 'Libraries',
-    description: 'External libraries and dependencies',
+    description: 'Libraries to introduce',
     name: 'libraries',
     fields: [
       {
         type: 'repeatable',
         id: 'items',
         label: 'Libraries',
-        minCount: 0,
+        minCount: 1,
         field: {
           type: 'group',
           fields: [
@@ -121,15 +40,6 @@ const enSteps = [
               description: 'Name of the library',
               placeholder: 'e.g., react-query, zod',
               required: true,
-              suggestions: [
-                'react-query',
-                'zod',
-                'zustand',
-                'react-hook-form',
-                'tailwindcss',
-                'axios',
-                'lodash',
-              ],
             },
             {
               type: 'input',
@@ -138,15 +48,6 @@ const enSteps = [
               description: 'Link to documentation or repository',
               placeholder: 'https://...',
               inputType: 'url',
-              when: { field: 'name', isNotEmpty: true },
-            },
-            {
-              type: 'textarea',
-              id: 'reason',
-              label: 'Reason',
-              description: 'Why this library is needed',
-              placeholder: 'Explain why this library is chosen...',
-              rows: 2,
             },
           ],
         },
@@ -162,7 +63,18 @@ const enPrompt = ({
   aiContext: unknown;
   formData: unknown;
 }) => {
-  return `You are a technical writer assistant. Generate a design document based on the following input.
+  return `You are a software architect. Create an introduction plan for the following libraries.
+
+## Tasks
+
+1. For each library URL provided, use WebFetch to retrieve and analyze the documentation
+2. Based on the analysis, create an introduction plan including:
+   - Library overview and purpose
+   - Key features and benefits
+   - Installation steps
+   - Basic usage examples
+   - Potential risks and considerations
+   - Recommended adoption timeline
 
 ## Input Data
 
@@ -172,14 +84,14 @@ ${JSON.stringify(aiContext, null, 2)}
 ### Form Data
 ${JSON.stringify(formData, null, 2)}
 
-Generate a design document based on the input above.`;
+Create a comprehensive library introduction plan based on the input above.`;
 };
 
 const enConfig: Config = {
   scenarios: [
     {
       id: 'default',
-      name: 'Design Doc Generator',
+      name: 'Library Introduction Plan',
       steps: enSteps,
       prompt: enPrompt,
     },
@@ -190,99 +102,18 @@ const enConfig: Config = {
 // Japanese Config
 // =============================================================================
 
-const jaPriorityOptions: SelectOption[] = [
-  { value: 'high', label: '高' },
-  { value: 'medium', label: '中' },
-  { value: 'low', label: '低' },
-];
-
 const jaSteps = [
-  {
-    slug: 'overview',
-    title: '概要',
-    description: '機能の基本情報',
-    name: 'overview',
-    fields: [
-      {
-        type: 'input',
-        id: 'title',
-        label: 'タイトル',
-        description: '機能のタイトル',
-        placeholder: '機能名を入力',
-        required: true,
-      },
-      {
-        type: 'textarea',
-        id: 'description',
-        label: '説明',
-        description: '機能の詳細説明',
-        placeholder: '機能について説明してください...',
-        rows: 4,
-      },
-      {
-        type: 'select',
-        id: 'priority',
-        label: '優先度',
-        description: '機能の優先度',
-        placeholder: '優先度を選択',
-        options: jaPriorityOptions,
-      },
-      {
-        type: 'input',
-        id: 'deadline',
-        label: '締め切り',
-        description: '目標完了日（高優先度の場合は必須）',
-        placeholder: 'YYYY-MM-DD',
-        inputType: 'date',
-        required: true,
-        when: { field: 'priority', is: 'high' },
-      },
-      {
-        type: 'textarea',
-        id: 'risk_assessment',
-        label: 'リスク評価',
-        description: '想定されるリスクと対策',
-        placeholder: '想定されるリスクを記述...',
-        rows: 3,
-        when: { field: 'priority', is: ['high', 'medium'] },
-      },
-    ],
-  },
-  {
-    slug: 'design',
-    title: 'デザイン',
-    description: 'デザインリファレンスとモックアップ',
-    name: 'design',
-    fields: [
-      {
-        type: 'input',
-        id: 'figma_link',
-        label: 'Figma リンク',
-        description: 'Figma デザインファイルまたはフレームへのリンク',
-        placeholder: 'https://www.figma.com/design/...',
-        inputType: 'url',
-      },
-      {
-        type: 'textarea',
-        id: 'design_notes',
-        label: 'デザインメモ',
-        description: 'デザインに関する補足事項',
-        placeholder: 'デザインで考慮すべき点など...',
-        rows: 3,
-      },
-    ],
-  },
   {
     slug: 'libraries',
     title: 'ライブラリ',
-    description: '外部ライブラリと依存関係',
+    description: '導入するライブラリ',
     name: 'libraries',
     fields: [
       {
         type: 'repeatable',
         id: 'items',
         label: 'ライブラリ一覧',
-        minCount: 0,
+        minCount: 1,
         field: {
           type: 'group',
           fields: [
@@ -293,15 +124,6 @@ const jaSteps = [
               description: 'ライブラリの名前',
               placeholder: '例: react-query, zod',
               required: true,
-              suggestions: [
-                'react-query',
-                'zod',
-                'zustand',
-                'react-hook-form',
-                'tailwindcss',
-                'axios',
-                'lodash',
-              ],
             },
             {
               type: 'input',
@@ -310,15 +132,6 @@ const jaSteps = [
               description: 'ドキュメントまたはリポジトリへのリンク',
               placeholder: 'https://...',
               inputType: 'url',
-              when: { field: 'name', isNotEmpty: true },
-            },
-            {
-              type: 'textarea',
-              id: 'reason',
-              label: '選定理由',
-              description: 'このライブラリが必要な理由',
-              placeholder: 'このライブラリを選んだ理由を説明...',
-              rows: 2,
             },
           ],
         },
@@ -334,7 +147,18 @@ const jaPrompt = ({
   aiContext: unknown;
   formData: unknown;
 }) => {
-  return `あなたはテクニカルライターアシスタントです。以下の入力に基づいて設計ドキュメントを生成してください。
+  return `あなたはソフトウェアアーキテクトです。以下のライブラリの導入プランを作成してください。
+
+## タスク
+
+1. 各ライブラリの URL が提供されている場合、WebFetch を使用してドキュメントを取得・分析してください
+2. 分析結果に基づき、以下を含む導入プランを作成してください：
+   - ライブラリの概要と目的
+   - 主な機能とメリット
+   - インストール手順
+   - 基本的な使用例
+   - 潜在的なリスクと考慮事項
+   - 推奨される導入スケジュール
 
 ## 入力データ
 
@@ -344,7 +168,7 @@ ${JSON.stringify(aiContext, null, 2)}
 ### フォームデータ
 ${JSON.stringify(formData, null, 2)}
 
-上記の入力に基づいて設計ドキュメントを生成してください。`;
+上記の入力に基づいて、包括的なライブラリ導入プランを作成してください。`;
 };
 
 const jaConfig: Config = {
