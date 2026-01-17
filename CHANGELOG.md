@@ -1,5 +1,12 @@
 # pre-claude
 
+## 0.0.1-beta.4
+
+### Patch Changes
+
+- bcb5422: feat: make preview height dynamic based on terminal size
+- 7325a97: feat: add continue in Claude feature to preview
+
 ## 0.0.1-beta.3
 
 ### Patch Changes
