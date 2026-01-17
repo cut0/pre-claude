@@ -10,6 +10,7 @@ import {
   getValueDisplay,
 } from '../../../../features/form/utils';
 import { useControl } from '../../../../hooks/useControl';
+import { adjustScrollOffset } from '../../../../utils/scroll';
 
 export type FieldSelectorProps = {
   flatItems: FlatFieldItem[];
@@ -17,6 +18,7 @@ export type FieldSelectorProps = {
   isFocused: boolean;
   isFirstStep: boolean;
   isLastStep: boolean;
+  maxHeight: number;
   onFocusUp: () => void;
   onFocusToForm: (item: FlatFieldItem, index: number) => void;
   onAddItem: (item: FlatFieldItem) => void;
@@ -33,6 +35,7 @@ export const FieldSelector: FC<FieldSelectorProps> = ({
   isFocused,
   isFirstStep,
   isLastStep,
+  maxHeight,
   onFocusUp,
   onFocusToForm,
   onAddItem,
@@ -43,9 +46,21 @@ export const FieldSelector: FC<FieldSelectorProps> = ({
   onBack,
 }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [scrollOffset, setScrollOffset] = useState(0);
 
   const validIndex = Math.min(selectedIndex, Math.max(0, flatItems.length - 1));
   const currentItem = flatItems[validIndex];
+
+  // Account for borders (2 lines) and title (1 line)
+  const maxVisibleItems = Math.max(3, maxHeight - 3);
+
+  const visibleItems = flatItems.slice(
+    scrollOffset,
+    scrollOffset + maxVisibleItems,
+  );
+
+  const hasMoreAbove = scrollOffset > 0;
+  const hasMoreBelow = scrollOffset + maxVisibleItems < flatItems.length;
 
   useControl({
     onUp: () => {
@@ -53,10 +68,19 @@ export const FieldSelector: FC<FieldSelectorProps> = ({
         onFocusUp();
         return;
       }
-      setSelectedIndex((prev) => prev - 1);
+      const newIndex = selectedIndex - 1;
+      setSelectedIndex(newIndex);
+      setScrollOffset((prev) =>
+        adjustScrollOffset(newIndex, prev, maxVisibleItems),
+      );
     },
     onDown: () => {
-      setSelectedIndex((prev) => (prev < flatItems.length - 1 ? prev + 1 : 0));
+      const newIndex =
+        selectedIndex < flatItems.length - 1 ? selectedIndex + 1 : 0;
+      setSelectedIndex(newIndex);
+      setScrollOffset((prev) =>
+        adjustScrollOffset(newIndex, prev, maxVisibleItems),
+      );
     },
     onEnter: () => {
       if (!currentItem) return;
@@ -106,8 +130,10 @@ export const FieldSelector: FC<FieldSelectorProps> = ({
         </Text>
       </Box>
       <Box flexDirection="column" overflowY="hidden">
-        {flatItems.map((item, index) => {
-          const isSelected = index === validIndex;
+        {hasMoreAbove && <Text dimColor>↑ more</Text>}
+        {visibleItems.map((item, visibleIndex) => {
+          const actualIndex = scrollOffset + visibleIndex;
+          const isSelected = actualIndex === validIndex;
           const valueDisplay = getValueDisplay(item, stepValues);
           const typeIndicator = getFieldTypeIndicator(item);
 
@@ -161,6 +187,7 @@ export const FieldSelector: FC<FieldSelectorProps> = ({
             </Box>
           );
         })}
+        {hasMoreBelow && <Text dimColor>↓ more</Text>}
       </Box>
     </Box>
   );
