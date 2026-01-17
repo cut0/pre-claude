@@ -1,4 +1,4 @@
-import { Box, Text } from 'ink';
+import { Box, Text, useStdout } from 'ink';
 import { type FC, useCallback, useMemo, useState } from 'react';
 
 import type { AiContext, Config, Scenario } from '../../../types';
@@ -35,13 +35,17 @@ export const Preview: FC<PreviewProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [scrollOffset, setScrollOffset] = useState(0);
+  const [dataPreviewScrollOffset, setDataPreviewScrollOffset] = useState(0);
   const [savedFilename, setSavedFilename] = useState<string | null>(null);
   const [showDataPreview, setShowDataPreview] = useState(false);
+  const { stdout } = useStdout();
 
   const isEditing = editingFilename != null;
   const canSave = previewContent !== '' && !isGenerating;
   const lines = previewContent.split('\n');
-  const maxVisible = 15;
+  // Layout: padding(1) + Header(1) + content + ControlBar(1) + StatusBar(1) + padding(1) + border(2) + line info(1)
+  const fixedHeight = 8;
+  const maxVisible = Math.max(10, (stdout?.rows ?? 24) - fixedHeight);
   const visibleLines = lines.slice(scrollOffset, scrollOffset + maxVisible);
 
   const controls = useMemo<ControlItem[]>(
@@ -134,6 +138,17 @@ export const Preview: FC<PreviewProps> = ({
     isSaving,
   ]);
 
+  // Memoize JSON data for scroll calculations
+  const formDataLines = useMemo(
+    () => JSON.stringify(formValues, null, 2).split('\n'),
+    [formValues],
+  );
+  const aiContextLines = useMemo(
+    () => JSON.stringify(aiContext, null, 2).split('\n'),
+    [aiContext],
+  );
+  const maxDataLines = Math.max(formDataLines.length, aiContextLines.length);
+
   useControl({
     onEscape: () => {
       if (showDataPreview) {
@@ -154,13 +169,33 @@ export const Preview: FC<PreviewProps> = ({
       }
     },
     onUp: () => {
-      setScrollOffset((prev) => Math.max(0, prev - 1));
+      if (showDataPreview) {
+        setDataPreviewScrollOffset((prev) => Math.max(0, prev - 1));
+      } else {
+        setScrollOffset((prev) => Math.max(0, prev - 1));
+      }
     },
     onDown: () => {
-      setScrollOffset((prev) => prev + 1);
+      if (showDataPreview) {
+        // Account for borders (2) and title (1) and hint (1)
+        const maxDataVisible = Math.max(5, maxVisible - 2);
+        setDataPreviewScrollOffset((prev) =>
+          Math.min(prev + 1, Math.max(0, maxDataLines - maxDataVisible)),
+        );
+      } else {
+        setScrollOffset((prev) =>
+          Math.min(prev + 1, Math.max(0, lines.length - maxVisible)),
+        );
+      }
     },
     onInfo: () => {
-      setShowDataPreview((prev) => !prev);
+      setShowDataPreview((prev) => {
+        if (!prev) {
+          // Reset scroll when opening data preview
+          setDataPreviewScrollOffset(0);
+        }
+        return !prev;
+      });
     },
   });
 
@@ -171,12 +206,23 @@ export const Preview: FC<PreviewProps> = ({
   });
 
   if (showDataPreview) {
-    const formDataJson = JSON.stringify(formValues, null, 2);
-    const aiContextJson = JSON.stringify(aiContext, null, 2);
+    // Account for borders (2) and title (1) and hint (1)
+    const maxDataVisible = Math.max(5, maxVisible - 2);
+    const visibleFormDataLines = formDataLines.slice(
+      dataPreviewScrollOffset,
+      dataPreviewScrollOffset + maxDataVisible,
+    );
+    const visibleAiContextLines = aiContextLines.slice(
+      dataPreviewScrollOffset,
+      dataPreviewScrollOffset + maxDataVisible,
+    );
+    const hasMoreDataAbove = dataPreviewScrollOffset > 0;
+    const hasMoreDataBelow =
+      dataPreviewScrollOffset + maxDataVisible < maxDataLines;
 
     return (
       <ScenarioLayout controls={controls} status={status}>
-        <Box flexDirection="row" gap={1}>
+        <Box flexDirection="row" gap={1} flexGrow={1}>
           <Box
             flexDirection="column"
             borderStyle="round"
@@ -191,9 +237,13 @@ export const Preview: FC<PreviewProps> = ({
                 formData{' '}
               </Text>
             </Box>
-            {formDataJson.split('\n').map((line, index) => (
-              <Text key={index}>{line || ' '}</Text>
-            ))}
+            <Box flexDirection="column" overflowY="hidden">
+              {hasMoreDataAbove && <Text dimColor>↑ more</Text>}
+              {visibleFormDataLines.map((line, index) => (
+                <Text key={dataPreviewScrollOffset + index}>{line || ' '}</Text>
+              ))}
+              {hasMoreDataBelow && <Text dimColor>↓ more</Text>}
+            </Box>
           </Box>
           <Box
             flexDirection="column"
@@ -209,13 +259,21 @@ export const Preview: FC<PreviewProps> = ({
                 aiContext{' '}
               </Text>
             </Box>
-            {aiContextJson.split('\n').map((line, index) => (
-              <Text key={index}>{line || ' '}</Text>
-            ))}
+            <Box flexDirection="column" overflowY="hidden">
+              {hasMoreDataAbove && <Text dimColor>↑ more</Text>}
+              {visibleAiContextLines.map((line, index) => (
+                <Text key={dataPreviewScrollOffset + index}>{line || ' '}</Text>
+              ))}
+              {hasMoreDataBelow && <Text dimColor>↓ more</Text>}
+            </Box>
           </Box>
         </Box>
         <Box paddingX={1}>
-          <Text dimColor>Press i or Esc to close</Text>
+          <Text dimColor>
+            Press i or Esc to close
+            {maxDataLines > maxDataVisible &&
+              ` | Lines ${dataPreviewScrollOffset + 1}-${Math.min(dataPreviewScrollOffset + maxDataVisible, maxDataLines)} of ${maxDataLines}`}
+          </Text>
         </Box>
       </ScenarioLayout>
     );

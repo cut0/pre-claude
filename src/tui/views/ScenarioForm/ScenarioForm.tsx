@@ -17,6 +17,7 @@ import {
 } from '../../features/form/utils';
 import { useFormState } from '../../hooks/useFormState';
 import { useMount } from '../../hooks/useMount';
+import { useTerminalHeight } from '../../hooks/useTerminalHeight';
 import type { StatusInfo } from '../../layouts/CommonLayout';
 import { ScenarioLayout } from '../../layouts/ScenarioLayout';
 import { FieldEditor } from './-internal/FieldEditor';
@@ -41,6 +42,9 @@ export const ScenarioForm: FC<ScenarioFormProps> = ({
   const [focusPanel, setFocusPanel] = useState<FocusPanel>('steps');
   const [currentItem, setCurrentItem] = useState<FlatFieldItem | undefined>();
   const [validationError, setValidationError] = useState<string | null>(null);
+  const { availableHeight } = useTerminalHeight();
+  // Account for StepSelector (~3 lines with borders)
+  const fieldSelectorHeight = Math.max(8, availableHeight - 3);
 
   const currentStep = scenario.steps[stepIndex];
 
@@ -314,13 +318,14 @@ export const ScenarioForm: FC<ScenarioFormProps> = ({
         onBack={onBack}
       />
 
-      <Box height={16}>
+      <Box flexGrow={1}>
         <FieldSelector
           flatItems={flatItems}
           stepValues={stepValues}
           isFocused={focusPanel === 'list'}
           isFirstStep={isFirstStep}
           isLastStep={isLastStep}
+          maxHeight={fieldSelectorHeight}
           onFocusUp={() => setFocusPanel('steps')}
           onFocusToForm={handleFocusToForm}
           onAddItem={handleAddItem}

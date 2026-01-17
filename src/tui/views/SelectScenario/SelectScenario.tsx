@@ -8,7 +8,9 @@ import type { DocumentWithMetadata } from '../../features/document/types';
 import { ACCENT_COLOR } from '../../features/form/types';
 import { useControl } from '../../hooks/useControl';
 import { useMount } from '../../hooks/useMount';
+import { useTerminalHeight } from '../../hooks/useTerminalHeight';
 import { CommonLayout } from '../../layouts/CommonLayout';
+import { adjustScrollOffset } from '../../utils/scroll';
 
 type FocusPanel = 'scenarios' | 'actions';
 
@@ -34,6 +36,12 @@ export const SelectScenario: FC<SelectScenarioProps> = ({
   const [focusPanel, setFocusPanel] = useState<FocusPanel>('scenarios');
   const [documents, setDocuments] = useState<DocumentWithMetadata[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [scenarioScrollOffset, setScenarioScrollOffset] = useState(0);
+  const [actionScrollOffset, setActionScrollOffset] = useState(0);
+
+  const { availableHeight } = useTerminalHeight();
+  // Account for panel borders (2 lines) and title (1 line)
+  const maxVisibleItems = Math.max(3, availableHeight - 3);
 
   const currentScenario = scenarios[scenarioIndex];
 
@@ -43,6 +51,16 @@ export const SelectScenario: FC<SelectScenarioProps> = ({
       ...documents.map((doc) => ({ type: 'document' as const, doc })),
     ],
     [documents],
+  );
+
+  const visibleScenarios = scenarios.slice(
+    scenarioScrollOffset,
+    scenarioScrollOffset + maxVisibleItems,
+  );
+
+  const visibleActionItems = actionItems.slice(
+    actionScrollOffset,
+    actionScrollOffset + maxVisibleItems,
   );
 
   const controls = useMemo<ControlItem[]>(() => {
@@ -86,12 +104,18 @@ export const SelectScenario: FC<SelectScenarioProps> = ({
       const newIndex =
         scenarioIndex > 0 ? scenarioIndex - 1 : scenarios.length - 1;
       setScenarioIndex(newIndex);
+      setScenarioScrollOffset((prev) =>
+        adjustScrollOffset(newIndex, prev, maxVisibleItems),
+      );
       loadDocuments(newIndex);
     },
     onDown: () => {
       const newIndex =
         scenarioIndex < scenarios.length - 1 ? scenarioIndex + 1 : 0;
       setScenarioIndex(newIndex);
+      setScenarioScrollOffset((prev) =>
+        adjustScrollOffset(newIndex, prev, maxVisibleItems),
+      );
       loadDocuments(newIndex);
     },
     onRight: () => {
@@ -106,10 +130,20 @@ export const SelectScenario: FC<SelectScenarioProps> = ({
 
   useControl({
     onUp: () => {
-      setActionIndex((prev) => (prev > 0 ? prev - 1 : actionItems.length - 1));
+      const newIndex =
+        actionIndex > 0 ? actionIndex - 1 : actionItems.length - 1;
+      setActionIndex(newIndex);
+      setActionScrollOffset((prev) =>
+        adjustScrollOffset(newIndex, prev, maxVisibleItems),
+      );
     },
     onDown: () => {
-      setActionIndex((prev) => (prev < actionItems.length - 1 ? prev + 1 : 0));
+      const newIndex =
+        actionIndex < actionItems.length - 1 ? actionIndex + 1 : 0;
+      setActionIndex(newIndex);
+      setActionScrollOffset((prev) =>
+        adjustScrollOffset(newIndex, prev, maxVisibleItems),
+      );
     },
     onEnter: () => {
       const item = actionItems[actionIndex];
@@ -135,9 +169,16 @@ export const SelectScenario: FC<SelectScenarioProps> = ({
     loadDocuments(0);
   });
 
+  const hasMoreScenariosAbove = scenarioScrollOffset > 0;
+  const hasMoreScenariosBelow =
+    scenarioScrollOffset + maxVisibleItems < scenarios.length;
+  const hasMoreActionsAbove = actionScrollOffset > 0;
+  const hasMoreActionsBelow =
+    actionScrollOffset + maxVisibleItems < actionItems.length;
+
   return (
     <CommonLayout controls={controls}>
-      <Box>
+      <Box flexGrow={1}>
         <Box
           width="40%"
           flexDirection="column"
@@ -155,9 +196,11 @@ export const SelectScenario: FC<SelectScenarioProps> = ({
               Scenarios{' '}
             </Text>
           </Box>
-          <Box flexDirection="column">
-            {scenarios.map((scenario, index) => {
-              const isSelected = index === scenarioIndex;
+          <Box flexDirection="column" overflowY="hidden">
+            {hasMoreScenariosAbove && <Text dimColor>↑ more</Text>}
+            {visibleScenarios.map((scenario, visibleIndex) => {
+              const actualIndex = scenarioScrollOffset + visibleIndex;
+              const isSelected = actualIndex === scenarioIndex;
               const isFocused = focusPanel === 'scenarios';
               return (
                 <Box key={scenario.id}>
@@ -177,6 +220,7 @@ export const SelectScenario: FC<SelectScenarioProps> = ({
                 </Box>
               );
             })}
+            {hasMoreScenariosBelow && <Text dimColor>↓ more</Text>}
           </Box>
         </Box>
 
@@ -198,35 +242,40 @@ export const SelectScenario: FC<SelectScenarioProps> = ({
               {currentScenario?.name ?? 'Documents'}{' '}
             </Text>
           </Box>
-          <Box flexDirection="column">
+          <Box flexDirection="column" overflowY="hidden">
             {isLoading ? (
               <Text dimColor>Loading...</Text>
             ) : (
-              actionItems.map((item, index) => {
-                const isSelected = index === actionIndex;
-                const isFocused = focusPanel === 'actions';
-                const label =
-                  item.type === 'new' ? item.label : item.doc.filename;
-                return (
-                  <Box key={item.type === 'new' ? 'new' : item.doc.filename}>
-                    <Text
-                      color={
-                        isSelected && isFocused
-                          ? 'black'
-                          : item.type === 'new'
-                            ? 'green'
-                            : undefined
-                      }
-                      backgroundColor={
-                        isSelected && isFocused ? ACCENT_COLOR : undefined
-                      }
-                    >
-                      {' '}
-                      {label}{' '}
-                    </Text>
-                  </Box>
-                );
-              })
+              <>
+                {hasMoreActionsAbove && <Text dimColor>↑ more</Text>}
+                {visibleActionItems.map((item, visibleIndex) => {
+                  const actualIndex = actionScrollOffset + visibleIndex;
+                  const isSelected = actualIndex === actionIndex;
+                  const isFocused = focusPanel === 'actions';
+                  const label =
+                    item.type === 'new' ? item.label : item.doc.filename;
+                  return (
+                    <Box key={item.type === 'new' ? 'new' : item.doc.filename}>
+                      <Text
+                        color={
+                          isSelected && isFocused
+                            ? 'black'
+                            : item.type === 'new'
+                              ? 'green'
+                              : undefined
+                        }
+                        backgroundColor={
+                          isSelected && isFocused ? ACCENT_COLOR : undefined
+                        }
+                      >
+                        {' '}
+                        {label}{' '}
+                      </Text>
+                    </Box>
+                  );
+                })}
+                {hasMoreActionsBelow && <Text dimColor>↓ more</Text>}
+              </>
             )}
           </Box>
         </Box>
