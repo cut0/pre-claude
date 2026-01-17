@@ -19,32 +19,78 @@ Works seamlessly with your existing Claude Code setup including MCP and Skills.
 
 ```bash
 npm install pre-claude
-# or
-pnpm add pre-claude
 ```
 
 ## Usage
 
-### Initialize Config
-
 ```bash
-npx pre-claude init [-o filename] [-f]
-```
+# Try the example
+npx pre-claude example
+npx pre-claude example --lang ja
 
-### Run TUI
+# Create a config file
+npx pre-claude init
 
-```bash
+# Run the TUI
 npx pre-claude run --config ./pre-claude.config.ts
-# or with scenario ID
-npx pre-claude run --config ./pre-claude.config.ts --scenario design-doc
 ```
+
+## Screens
+
+The TUI consists of 3 screens.
+
+### Scenario Selection Screen
+
+A 2-pane screen displayed at startup. Select a scenario in the left pane, then choose to create new or edit an existing document in the right pane.
+
+![select](docs/assets/select.gif)
+
+| Key | Action |
+|-----|--------|
+| `↑↓` / `j/k` | Navigate items |
+| `→` / `l` / `Enter` | Select / Move to right pane |
+| `←` / `h` / `Esc` | Move to left pane |
+| `q` | Quit |
+
+### Form Input Screen
+
+A 3-panel layout with step tabs at the top, field list on the left, and editing area on the right.
+
+![edit](docs/assets/edit.gif)
+
+| Key | Action |
+|-----|--------|
+| `←→` / `h/l` | Navigate steps |
+| `↑↓` / `j/k` | Navigate fields |
+| `Enter` | Start editing / Confirm |
+| `Esc` | Cancel |
+| `n` / `p` | Next / Previous step |
+| `d` | Delete repeatable item |
+| `g` | Generate preview |
+| `q` | Go back |
+
+### Preview Screen
+
+AI generates the document and displays the result with streaming.
+
+![preview](docs/assets/preview.gif)
+
+| Key | Action |
+|-----|--------|
+| `↑↓` / `j/k` | Scroll |
+| `r` | Regenerate |
+| `s` | Save |
+| `c` | Continue in Claude Code |
+| `i` | Show formData / aiContext |
+| `Esc` / `q` | Go back |
+
+Press `c` to continue the conversation in Claude Code, inheriting the current session.
 
 ## Configuration
 
 ### Basic Structure
 
 ```typescript
-// pre-claude.config.ts
 import { defineConfig, defineScenario, type Step } from 'pre-claude';
 
 const steps = [
@@ -55,29 +101,11 @@ const steps = [
     name: 'overview',
     fields: [
       {
-        id: 'projectName',
+        id: 'title',
         type: 'input',
-        label: 'Project Name',
-        description: 'Enter the name of your project',
+        label: 'Title',
+        description: 'Project name',
         required: true,
-      },
-      {
-        id: 'description',
-        type: 'textarea',
-        label: 'Description',
-        description: 'Describe the project briefly',
-        rows: 5,
-      },
-      {
-        id: 'priority',
-        type: 'select',
-        label: 'Priority',
-        description: 'Select the priority level',
-        options: [
-          { value: 'low', label: 'Low' },
-          { value: 'medium', label: 'Medium' },
-          { value: 'high', label: 'High' },
-        ],
       },
     ],
   },
@@ -97,55 +125,60 @@ export default defineConfig({
 });
 ```
 
-### Scenario Properties
+### Scenario
 
 | Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| `id` | `string` | Yes | Unique identifier |
-| `name` | `string` | Yes | Display name |
-| `steps` | `Step[]` | Yes | Form wizard steps |
-| `prompt` | `function` | Yes | Prompt generator function |
-| `outputDir` | `string` | No | Output directory |
-| `filename` | `string \| function` | No | Custom filename |
+|----------|------|:--------:|-------------|
+| `id` | `string` | ○ | Unique identifier |
+| `name` | `string` | ○ | Display name |
+| `steps` | `Step[]` | ○ | Form wizard steps |
+| `prompt` | `(params) => string` | ○ | Prompt generator function |
+| `outputDir` | `string` | | Output directory |
+| `filename` | `string \| function` | | Filename |
 
-## Field Types
+The `prompt` function receives `formData` (input values) and `aiContext` (field labels and descriptions).
 
-### input
+### Step
 
-Single-line text input. Supports type variants (`text`, `date`, `url`) and autocomplete suggestions.
+| Property | Type | Description |
+|----------|------|-------------|
+| `slug` | `string` | URL-friendly identifier |
+| `title` | `string` | Title |
+| `description` | `string` | Description |
+| `name` | `string` | Key name in formData |
+| `fields` | `Field[]` | Field array |
+
+### Field Types
+
+#### input
 
 ```typescript
 {
   id: 'title',
   type: 'input',
   label: 'Title',
-  description: 'Enter the title',
-  placeholder: 'My Project',
+  description: 'Description',
+  placeholder: 'Placeholder',
   required: true,
   inputType: 'text', // 'text' | 'date' | 'url'
-  suggestions: ['Option A', 'Option B'],
-  default: 'Default Value',
+  suggestions: ['Option 1', 'Option 2'], // Autocomplete
+  default: 'Default value',
 }
 ```
 
-### textarea
-
-Multi-line text input. The `rows` property controls the display height.
+#### textarea
 
 ```typescript
 {
   id: 'description',
   type: 'textarea',
   label: 'Description',
-  description: 'Enter description',
+  description: 'Detailed description',
   rows: 5,
-  default: 'Default text',
 }
 ```
 
-### select
-
-Dropdown selection from predefined options.
+#### select
 
 ```typescript
 {
@@ -162,26 +195,23 @@ Dropdown selection from predefined options.
 }
 ```
 
-### checkbox
-
-Boolean toggle for true/false values.
+#### checkbox
 
 ```typescript
 {
   id: 'agree',
   type: 'checkbox',
-  label: 'I agree to the terms',
-  description: 'Required to continue',
+  label: 'I agree',
+  description: 'Agreement to terms',
   required: true,
-  default: false,
 }
 ```
 
-## Layouts
+### Layouts
 
-### repeatable
+#### repeatable
 
-Allows dynamic addition and removal of field instances. Use `minCount` to set minimum items and `defaultCount` for initial count.
+A repeatable field that can be dynamically added or removed.
 
 ```typescript
 {
@@ -194,56 +224,40 @@ Allows dynamic addition and removal of field instances. Use `minCount` to set mi
     type: 'group',
     fields: [
       { id: 'name', type: 'input', label: 'Name', description: '' },
-      { id: 'description', type: 'textarea', label: 'Description', description: '', rows: 2 },
+      { id: 'desc', type: 'textarea', label: 'Description', description: '', rows: 2 },
     ],
   },
 }
 ```
 
-### group
-
-Groups multiple fields together visually without affecting data structure.
+formData becomes an array:
 
 ```typescript
 {
-  type: 'group',
-  fields: [
-    { id: 'street', type: 'input', label: 'Street', description: '' },
-    { id: 'city', type: 'input', label: 'City', description: '' },
-  ],
+  features: [
+    { name: 'Feature 1', desc: 'Description 1' },
+    { name: 'Feature 2', desc: 'Description 2' },
+  ]
 }
 ```
 
-## Conditional Display
+#### group
 
-Fields support conditional visibility via the `when` property.
+Groups multiple fields together. Used within repeatable.
 
-### Simple Conditions
+### Conditional Display
+
+Use the `when` property to specify display conditions for fields.
 
 ```typescript
-// Show when priority is 'high'
+// Simple conditions
 { ..., when: { field: 'priority', is: 'high' } }
-
-// Show when priority is 'high' or 'medium'
 { ..., when: { field: 'priority', is: ['high', 'medium'] } }
-
-// Show when priority is NOT 'low'
 { ..., when: { field: 'priority', isNot: 'low' } }
-
-// Show when checkbox is checked
-{ ..., when: { field: 'hasDeadline', is: true } }
-
-// Show when field is not empty
 { ..., when: { field: 'title', isNotEmpty: true } }
-
-// Show when field is empty
 { ..., when: { field: 'notes', isEmpty: true } }
-```
 
-### AND / OR Conditions
-
-```typescript
-// AND: both conditions must be true
+// AND condition
 {
   ...,
   when: {
@@ -254,7 +268,7 @@ Fields support conditional visibility via the `when` property.
   }
 }
 
-// OR: either condition must be true
+// OR condition
 {
   ...,
   when: {
@@ -264,33 +278,27 @@ Fields support conditional visibility via the `when` property.
     ]
   }
 }
-```
 
-### Nested Conditions
-
-```typescript
-{
-  ...,
-  when: {
-    or: [
-      { field: 'priority', is: 'high' },
-      {
-        and: [
-          { field: 'type', is: 'feature' },
-          { field: 'status', is: 'approved' }
-        ]
-      }
-    ]
-  }
-}
-```
-
-### Cross-Step References
-
-Use dot notation to reference fields in other steps.
-
-```typescript
+// Reference fields from other steps
 { ..., when: { field: 'overview.priority', is: 'high' } }
+```
+
+### Type Safety
+
+Using `defineScenario` with `as const satisfies Step[]` enables type inference for `formData`.
+
+```typescript
+const scenario = defineScenario({
+  id: 'my-scenario',
+  name: 'My Scenario',
+  steps,
+  prompt: ({ formData }) => {
+    // formData.overview?.title is string | undefined
+    return `Title: ${formData.overview?.title ?? 'Untitled'}`;
+  },
+  filename: ({ formData, timestamp }) =>
+    `${formData.overview?.title ?? 'untitled'}-${timestamp}.md`,
+});
 ```
 
 ## License
