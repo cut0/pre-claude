@@ -8,8 +8,6 @@ Works seamlessly with your existing Claude Code setup including MCP and Skills.
 
 - **Scenario**: Defines a document type (e.g., design doc, meeting notes). Configure prompt templates and output destinations.
 - **Step**: Each page of the form wizard. Group related fields together for easier input.
-- **formData**: An object containing the values entered in the form. Used for prompt generation.
-- **aiContext**: Metadata such as field labels and descriptions. Helps the AI understand the meaning of each field.
 
 | Scenario Selection | Form Input | Preview |
 |:---:|:---:|:---:|
@@ -141,7 +139,10 @@ export default defineConfig({
 | `outputDir` | `string` | | Output directory |
 | `filename` | `string \| function` | | Filename |
 
-The `prompt` function receives `formData` (input values) and `aiContext` (field labels and descriptions).
+The `prompt` function receives the following arguments:
+
+- **formData**: An object containing the values entered in the form.
+- **aiContext**: Metadata such as field labels and descriptions. Helps the AI understand the meaning of each field.
 
 ### Step
 
