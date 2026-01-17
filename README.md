@@ -2,14 +2,13 @@
 
 [日本語版](./README-ja.md)
 
-**Pre** Claude is a tool for creating prompts via TUI when running Claude.
-You can define forms in TypeScript config files and share them with your team.
+A TUI tool for efficiently creating complex prompts with structured forms for Claude Code.
+Define templates in TypeScript config files to share with your team and enable reproducible prompt workflows.
+Works seamlessly with your existing Claude Code setup including MCP and Skills.
 
-## Features
-
-- TypeScript-based form configuration
-- Interactive TUI form wizard
-- Uses local Claude Code settings
+| Scenario Selection | Form Input | Preview |
+|:---:|:---:|:---:|
+| ![select](docs/assets/select.gif) | ![edit](docs/assets/edit.gif) | ![preview](docs/assets/preview.gif) |
 
 ## Requirements
 

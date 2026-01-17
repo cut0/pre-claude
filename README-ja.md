@@ -1,13 +1,12 @@
 # pre-claude
 
-**Pre** Claude は Claude を実行する際のプロンプトを TUI を介して作成するツールです。
-TypeScript 設定ファイルでフォームを定義することができチームで共有することができます。
+複雑なプロンプトをフォームで効率的に作成できる Claude Code 向け TUI ツールです。
+TypeScript 設定ファイルで定義したテンプレートをチームで共有し、再現性のあるプロンプト運用を実現できます。
+MCP や Skills など既存の Claude Code セットアップをそのまま利用できます。
 
-## 特徴
-
-- TypeScript ベースのフォーム設定
-- 対話型 TUI フォームウィザード
-- ローカル Claude Code 設定を使用
+| シナリオ選択 | フォーム入力 | プレビュー |
+|:---:|:---:|:---:|
+| ![select](docs/assets/select.gif) | ![edit](docs/assets/edit.gif) | ![preview](docs/assets/preview.gif) |
 
 ## 必要条件
 
@@ -18,32 +17,78 @@ TypeScript 設定ファイルでフォームを定義することができチー
 
 ```bash
 npm install pre-claude
-# または
-pnpm add pre-claude
 ```
 
 ## 使い方
 
-### 設定ファイルの初期化
-
 ```bash
-npx pre-claude init [-o ファイル名] [-f]
-```
+# サンプルを試す
+npx pre-claude example
+npx pre-claude example --lang ja
 
-### TUI の実行
+# 設定ファイルを作成
+npx pre-claude init
 
-```bash
+# TUI を起動
 npx pre-claude run --config ./pre-claude.config.ts
-# シナリオ ID 指定
-npx pre-claude run --config ./pre-claude.config.ts --scenario design-doc
 ```
 
-## 設定
+## 画面
+
+TUI は 3 つの画面で構成される。
+
+### シナリオ選択画面
+
+起動時に表示される 2 ペイン画面。左ペインでシナリオを選び、右ペインで新規作成または既存ドキュメントの編集を選択する。
+
+![select](docs/assets/select.gif)
+
+| キー | 動作 |
+|------|------|
+| `↑↓` / `j/k` | 項目移動 |
+| `→` / `l` / `Enter` | 選択 / 右ペインへ |
+| `←` / `h` / `Esc` | 左ペインへ |
+| `q` | 終了 |
+
+### フォーム入力画面
+
+上部にステップタブ、左側にフィールド一覧、右側に編集エリアの 3 パネル構成。
+
+![edit](docs/assets/edit.gif)
+
+| キー | 動作 |
+|------|------|
+| `←→` / `h/l` | ステップ移動 |
+| `↑↓` / `j/k` | フィールド移動 |
+| `Enter` | 編集開始 / 確定 |
+| `Esc` | キャンセル |
+| `n` / `p` | 次 / 前のステップ |
+| `d` | 繰り返し項目の削除 |
+| `g` | プレビュー生成 |
+| `q` | 戻る |
+
+### プレビュー画面
+
+AI がドキュメントを生成し、結果をストリーミング表示する。
+
+![preview](docs/assets/preview.gif)
+
+| キー | 動作 |
+|------|------|
+| `↑↓` / `j/k` | スクロール |
+| `r` | 再生成 |
+| `s` | 保存 |
+| `c` | Claude Code で続行 |
+| `i` | formData / aiContext 表示 |
+| `Esc` / `q` | 戻る |
+
+`c` を押すと Claude Code のセッションを引き継いで対話を続行できる。
+
+## 設定ファイル
 
 ### 基本構造
 
 ```typescript
-// pre-claude.config.ts
 import { defineConfig, defineScenario, type Step } from 'pre-claude';
 
 const steps = [
@@ -54,29 +99,11 @@ const steps = [
     name: 'overview',
     fields: [
       {
-        id: 'projectName',
+        id: 'title',
         type: 'input',
-        label: 'プロジェクト名',
-        description: 'プロジェクト名を入力',
+        label: 'タイトル',
+        description: 'プロジェクト名',
         required: true,
-      },
-      {
-        id: 'description',
-        type: 'textarea',
-        label: '説明',
-        description: 'プロジェクトの概要',
-        rows: 5,
-      },
-      {
-        id: 'priority',
-        type: 'select',
-        label: '優先度',
-        description: '優先度を選択',
-        options: [
-          { value: 'low', label: '低' },
-          { value: 'medium', label: '中' },
-          { value: 'high', label: '高' },
-        ],
       },
     ],
   },
@@ -96,55 +123,60 @@ export default defineConfig({
 });
 ```
 
-### シナリオプロパティ
+### シナリオ
 
 | プロパティ | 型 | 必須 | 説明 |
-|----------|------|------|------|
-| `id` | `string` | Yes | 一意識別子 |
-| `name` | `string` | Yes | 表示名 |
-| `steps` | `Step[]` | Yes | フォームステップ |
-| `prompt` | `function` | Yes | プロンプト生成関数 |
-| `outputDir` | `string` | No | 出力ディレクトリ |
-| `filename` | `string \| function` | No | カスタムファイル名 |
+|----------|------|:----:|------|
+| `id` | `string` | ○ | 一意識別子 |
+| `name` | `string` | ○ | 表示名 |
+| `steps` | `Step[]` | ○ | フォームステップ |
+| `prompt` | `(params) => string` | ○ | プロンプト生成関数 |
+| `outputDir` | `string` | | 出力ディレクトリ |
+| `filename` | `string \| function` | | ファイル名 |
 
-## フィールドタイプ
+`prompt` は `formData`（入力値）と `aiContext`（フィールドのラベル・説明）を受け取る。
 
-### input
+### ステップ
 
-単一行テキスト入力です。タイプバリエーション（`text`、`date`、`url`）とオートコンプリート候補をサポートしています。
+| プロパティ | 型 | 説明 |
+|----------|------|------|
+| `slug` | `string` | URL フレンドリーな識別子 |
+| `title` | `string` | タイトル |
+| `description` | `string` | 説明文 |
+| `name` | `string` | formData のキー名 |
+| `fields` | `Field[]` | フィールド配列 |
+
+### フィールドタイプ
+
+#### input
 
 ```typescript
 {
   id: 'title',
   type: 'input',
   label: 'タイトル',
-  description: 'タイトルを入力',
-  placeholder: 'マイプロジェクト',
+  description: '説明',
+  placeholder: 'プレースホルダー',
   required: true,
   inputType: 'text', // 'text' | 'date' | 'url'
-  suggestions: ['選択肢A', '選択肢B'],
+  suggestions: ['候補1', '候補2'], // オートコンプリート
   default: 'デフォルト値',
 }
 ```
 
-### textarea
-
-複数行テキスト入力です。`rows` プロパティで表示行数を制御できます。
+#### textarea
 
 ```typescript
 {
   id: 'description',
   type: 'textarea',
   label: '説明',
-  description: '説明を入力',
+  description: '詳細説明',
   rows: 5,
-  default: 'デフォルトテキスト',
 }
 ```
 
-### select
-
-定義済み選択肢からのドロップダウン選択です。
+#### select
 
 ```typescript
 {
@@ -161,88 +193,69 @@ export default defineConfig({
 }
 ```
 
-### checkbox
-
-真偽値のトグルです。
+#### checkbox
 
 ```typescript
 {
   id: 'agree',
   type: 'checkbox',
-  label: '利用規約に同意',
-  description: '続行に必須',
+  label: '同意する',
+  description: '利用規約への同意',
   required: true,
-  default: false,
 }
 ```
 
-## レイアウト
+### レイアウト
 
-### repeatable
+#### repeatable
 
-フィールドを動的に追加・削除できます。`minCount` で最小数、`defaultCount` で初期数を設定します。
+動的に追加・削除できる繰り返しフィールド。
 
 ```typescript
 {
   type: 'repeatable',
   id: 'features',
-  label: '機能',
+  label: '機能一覧',
   minCount: 1,
   defaultCount: 2,
   field: {
     type: 'group',
     fields: [
       { id: 'name', type: 'input', label: '名前', description: '' },
-      { id: 'description', type: 'textarea', label: '説明', description: '', rows: 2 },
+      { id: 'desc', type: 'textarea', label: '説明', description: '', rows: 2 },
     ],
   },
 }
 ```
 
-### group
-
-複数のフィールドを視覚的にグループ化します。データ構造には影響しません。
+formData は配列になる:
 
 ```typescript
 {
-  type: 'group',
-  fields: [
-    { id: 'street', type: 'input', label: '番地', description: '' },
-    { id: 'city', type: 'input', label: '市区町村', description: '' },
-  ],
+  features: [
+    { name: '機能1', desc: '説明1' },
+    { name: '機能2', desc: '説明2' },
+  ]
 }
 ```
 
-## 条件付き表示
+#### group
 
-`when` プロパティで条件付き表示を設定できます。
+複数フィールドをグループ化。repeatable 内で使用する。
 
-### 単純な条件
+### 条件付き表示
+
+`when` プロパティでフィールドの表示条件を指定できる。
 
 ```typescript
-// priority が 'high' のとき表示
+// 単純な条件
 { ..., when: { field: 'priority', is: 'high' } }
-
-// priority が 'high' または 'medium' のとき表示
 { ..., when: { field: 'priority', is: ['high', 'medium'] } }
-
-// priority が 'low' でないとき表示
 { ..., when: { field: 'priority', isNot: 'low' } }
-
-// チェックボックスがオンのとき表示
-{ ..., when: { field: 'hasDeadline', is: true } }
-
-// フィールドが空でないとき表示
 { ..., when: { field: 'title', isNotEmpty: true } }
-
-// フィールドが空のとき表示
 { ..., when: { field: 'notes', isEmpty: true } }
-```
 
-### AND / OR 条件
-
-```typescript
-// AND: 両条件が true のとき表示
+// AND 条件
 {
   ...,
   when: {
@@ -253,7 +266,7 @@ export default defineConfig({
   }
 }
 
-// OR: いずれかが true のとき表示
+// OR 条件
 {
   ...,
   when: {
@@ -263,33 +276,27 @@ export default defineConfig({
     ]
   }
 }
-```
 
-### ネスト条件
-
-```typescript
-{
-  ...,
-  when: {
-    or: [
-      { field: 'priority', is: 'high' },
-      {
-        and: [
-          { field: 'type', is: 'feature' },
-          { field: 'status', is: 'approved' }
-        ]
-      }
-    ]
-  }
-}
-```
-
-### ステップ間参照
-
-ドット記法で他のステップのフィールドを参照できます。
-
-```typescript
+// 他ステップのフィールドを参照
 { ..., when: { field: 'overview.priority', is: 'high' } }
+```
+
+### 型安全
+
+`defineScenario` と `as const satisfies Step[]` を使うと `formData` に型推論が効く。
+
+```typescript
+const scenario = defineScenario({
+  id: 'my-scenario',
+  name: 'マイシナリオ',
+  steps,
+  prompt: ({ formData }) => {
+    // formData.overview?.title は string | undefined
+    return `タイトル: ${formData.overview?.title ?? 'Untitled'}`;
+  },
+  filename: ({ formData, timestamp }) =>
+    `${formData.overview?.title ?? 'untitled'}-${timestamp}.md`,
+});
 ```
 
 ## ライセンス
