@@ -47,6 +47,8 @@ npx pre-claude init
 npx pre-claude run --config ./pre-claude.config.ts
 ```
 
+See [examples/](./examples/) for configuration examples.
+
 ## Screens
 
 The TUI consists of 3 screens.
