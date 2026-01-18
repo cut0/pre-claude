@@ -1,5 +1,11 @@
 # pre-claude
 
+## 0.0.1-beta.7
+
+### Patch Changes
+
+- 20ebea9: docs: improve examples documentation and add GitHub link to header
+
 ## 0.0.1-beta.6
 
 ### Patch Changes
