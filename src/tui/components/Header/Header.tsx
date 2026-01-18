@@ -20,7 +20,12 @@ export const Header: FC<HeaderProps> = ({
       <Text color={ACCENT_COLOR} bold>
         🐍 pre-claude
       </Text>
-      <Text color={ACCENT_COLOR}>{description}</Text>
+      <Box flexDirection="column" alignItems="flex-end">
+        <Text color={ACCENT_COLOR}>{description}</Text>
+        <Text color={ACCENT_COLOR} dimColor>
+          https://github.com/cut0/pre-claude
+        </Text>
+      </Box>
     </Box>
   );
 };

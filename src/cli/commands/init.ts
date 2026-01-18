@@ -5,7 +5,6 @@ import { defineCommand } from 'citty';
 import { consola } from 'consola';
 
 const CONFIG_TEMPLATE = `// For more detailed configuration examples, see:
-// https://github.com/cut0/pre-claude/blob/main/examples
 
 import { defineConfig, defineScenario } from 'pre-claude';
 
@@ -57,9 +56,6 @@ export default defineConfig({
         \`Generate a design doc based on the following input:\n\${JSON.stringify({ formData, aiContext }, null, 2)}\`,
     }),
   ],
-  permissions: {
-    allowSave: true,
-  },
 });
 `;
 

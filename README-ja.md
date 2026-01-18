@@ -45,6 +45,8 @@ npx pre-claude init
 npx pre-claude run --config ./pre-claude.config.ts
 ```
 
+設定例は [examples/](./examples/README.ja.md) を参照してください。
+
 ## 画面
 
 TUI は 3 つの画面で構成されています。
