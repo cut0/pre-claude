@@ -1,6 +1,6 @@
 {
   "name": "pre-claude",
-  "version": "0.0.1-beta.7",
+  "version": "0.0.1",
   "description": "🐍 TUI for building structured prompts for Claude",
   "keywords": [
     "cli",
