@@ -14,6 +14,7 @@ export type TextFieldProps = {
   isTextarea: boolean;
   isFocused: boolean;
   suggestions?: string[];
+  onOpenExternalEditor?: () => void;
 };
 
 export const TextField: FC<TextFieldProps> = ({
@@ -26,6 +27,7 @@ export const TextField: FC<TextFieldProps> = ({
   isTextarea,
   isFocused,
   suggestions,
+  onOpenExternalEditor,
 }) => {
   if (isFocused) {
     return (
@@ -44,10 +46,11 @@ export const TextField: FC<TextFieldProps> = ({
           placeholder={placeholder}
           multiline={isTextarea}
           suggestions={suggestions}
+          onOpenExternalEditor={isTextarea ? onOpenExternalEditor : undefined}
         />
         {isTextarea && (
           <Box marginTop={1}>
-            <Text dimColor>Enter: newline | Tab: confirm</Text>
+            <Text dimColor>Enter: newline | Ctrl+G: vim | Tab: confirm</Text>
           </Box>
         )}
       </Box>

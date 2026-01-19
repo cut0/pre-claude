@@ -17,6 +17,7 @@ export type FieldEditorContentProps = {
   onTextSubmit: () => void;
   onTextCancel: () => void;
   selectIndex: number;
+  onOpenExternalEditor?: () => void;
 };
 
 export const FieldEditorContent: FC<FieldEditorContentProps> = ({
@@ -28,6 +29,7 @@ export const FieldEditorContent: FC<FieldEditorContentProps> = ({
   onTextSubmit,
   onTextCancel,
   selectIndex,
+  onOpenExternalEditor,
 }) => {
   if (!currentItem) {
     return <Empty />;
@@ -78,6 +80,9 @@ export const FieldEditorContent: FC<FieldEditorContentProps> = ({
       isTextarea={field.type === 'textarea'}
       isFocused={isFocused}
       suggestions={field.type === 'input' ? field.suggestions : undefined}
+      onOpenExternalEditor={
+        field.type === 'textarea' ? onOpenExternalEditor : undefined
+      }
     />
   );
 };

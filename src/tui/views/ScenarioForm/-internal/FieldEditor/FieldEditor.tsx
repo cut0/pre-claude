@@ -1,4 +1,8 @@
-import { Box, Text } from 'ink';
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { Box, Text, useStdin } from 'ink';
 import { type FC, useCallback, useState } from 'react';
 
 import type { SelectField } from '../../../../../types';
@@ -59,6 +63,37 @@ export const FieldEditor: FC<FieldEditorProps> = ({
   const [selectIndex, setSelectIndex] = useState(() =>
     getInitialSelectIndex(currentItem, stepValues),
   );
+
+  const { setRawMode, isRawModeSupported } = useStdin();
+
+  const handleOpenExternalEditor = useCallback(() => {
+    if (!isRawModeSupported) return;
+
+    // Create temp file with current content
+    const tempDir = mkdtempSync(join(tmpdir(), 'pre-claude-'));
+    const tempFile = join(tempDir, 'edit.txt');
+    writeFileSync(tempFile, editValue, 'utf-8');
+
+    try {
+      // Disable raw mode for external editor
+      setRawMode(false);
+
+      // Launch external editor
+      // biome-ignore lint/complexity/useLiteralKeys: noPropertyAccessFromIndexSignature is enabled in tsconfig
+      const editor = process.env['EDITOR'] || 'vim';
+      spawnSync(editor, [tempFile], { stdio: 'inherit' });
+
+      // Read edited content
+      const newContent = readFileSync(tempFile, 'utf-8');
+      setEditValue(newContent);
+    } finally {
+      // Always restore raw mode
+      setRawMode(true);
+
+      // Cleanup temp files
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  }, [editValue, setRawMode, isRawModeSupported]);
 
   useControl({
     onUp: () => {
@@ -126,6 +161,11 @@ export const FieldEditor: FC<FieldEditorProps> = ({
         onTextSubmit={handleTextSubmit}
         onTextCancel={handleTextCancel}
         selectIndex={selectIndex}
+        onOpenExternalEditor={
+          currentItem?.type === 'field' && currentItem.field.type === 'textarea'
+            ? handleOpenExternalEditor
+            : undefined
+        }
       />
     </Box>
   );
