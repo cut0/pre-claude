@@ -1,5 +1,11 @@
 # pre-claude
 
+## 0.0.2
+
+### Patch Changes
+
+- 9b66973: feat: add external editor support for textarea fields
+
 ## 0.0.1
 
 ### Patch Changes
