@@ -1,5 +1,20 @@
 # pre-claude
 
+## 0.0.1
+
+### Patch Changes
+
+- d45281a: refactor: inline example configs in example command
+- bcb5422: feat: make preview height dynamic based on terminal size
+- b461603: docs: improve README clarity and add field descriptions
+- 00fc0d8: docs: improve README descriptions and add screenshot table
+- f011d38: chore: remove unused dependencies (hono, tsx)
+- 0063aaa: docs: improve README with concepts, schemas, and better structure
+- 168f5be: chore: remove unused code and consolidate isLayoutField
+- b813ffb: chore: exit prerelease mode for stable release
+- 7325a97: feat: add continue in Claude feature to preview
+- 20ebea9: docs: improve examples documentation and add GitHub link to header
+
 ## 0.0.1-beta.7
 
 ### Patch Changes
