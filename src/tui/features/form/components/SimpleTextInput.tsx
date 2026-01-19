@@ -11,6 +11,7 @@ type SimpleTextInputProps = {
   placeholder?: string;
   multiline?: boolean;
   suggestions?: string[];
+  onOpenExternalEditor?: () => void;
 };
 
 const MAX_VISIBLE_SUGGESTIONS = 5;
@@ -23,6 +24,7 @@ export const SimpleTextInput: FC<SimpleTextInputProps> = ({
   placeholder = '',
   multiline = false,
   suggestions = [],
+  onOpenExternalEditor,
 }) => {
   const [cursorPosition, setCursorPosition] = useState(value.length);
   const [suggestionIndex, setSuggestionIndex] = useState(-1);
@@ -84,6 +86,12 @@ export const SimpleTextInput: FC<SimpleTextInputProps> = ({
         return;
       }
       onCancel();
+      return;
+    }
+
+    // Ctrl+G: open external editor (textarea only)
+    if (multiline && key.ctrl && input === 'g') {
+      onOpenExternalEditor?.();
       return;
     }
 
